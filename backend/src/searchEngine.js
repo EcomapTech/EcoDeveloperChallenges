@@ -1,9 +1,12 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // Read and process the corpus file (hemingway.txt)
-const corpusPath = path.join(__dirname, 'corpus/hemingway.txt');
-const searchCorpus = fs.readFileSync(corpusPath, 'utf-8').toLowerCase().split(/\s+/);
+const corpusPath = path.join(__dirname, "corpus/hemingway.txt");
+const searchCorpus = fs
+  .readFileSync(corpusPath, "utf-8")
+  .toLowerCase()
+  .split(/\s+/);
 
 // Helper function for similarity calculation (Levenshtein distance)
 function levenshteinDistance(s1, s2) {
@@ -19,15 +22,70 @@ function levenshteinDistance(s1, s2) {
   );
 }
 
-function searchSimilarWords(query) {
-  const similarWords = searchCorpus
-    .map((word) => ({ word, distance: levenshteinDistance(query, word) }))
-    .sort((a, b) => a.distance - b.distance)
-    .slice(0, 3)
-    .map((result) => result.word);
+// function searchSimilarWords(query) {
+//   const wordDistances = searchCorpus.map((word) => ({
+//     word,
+//     distance: levenshteinDistance(query, word),
+//   }));
 
-  return similarWords;
+//   const sortedWords = wordDistances.sort((a, b) => a.distance - b.distance);
+//   const similarWords = sortedWords.slice(0, 3).map((result) => result.word);
+//   const count = wordDistances.filter((result) => result.word === query);
+
+//   return { similarWords, count };
+// }
+
+// function searchSimilarWords(query) {
+//   const sortedQuery = query.toLowerCase().split('').sort().join('');
+  
+//   const matchingWords = searchCorpus.filter((word) => {
+//     const lowercaseWord = word.toLowerCase();
+//     const sortedWord = lowercaseWord.split('').sort().join('');
+//     return sortedWord.includes(sortedQuery);
+//   });
+
+//   const wordDistances = matchingWords.map((word) => ({
+//     word,
+//     distance: levenshteinDistance(query, word),
+//   }));
+
+//   const sortedWords = wordDistances.sort((a, b) => a.distance - b.distance);
+
+//   const similarWords = sortedWords.slice(0, 3).map((result) => result.word);
+//   const count = matchingWords.filter((word) => word.toLowerCase() === query.toLowerCase()).length;
+
+//   return { similarWords, count };
+// }
+
+function searchSimilarWords(query) {
+  const regexPattern = createRegexPattern(query);
+
+  const matchingWords = searchCorpus.filter((word) => regexPattern.test(word.toLowerCase()));
+
+  const wordDistances = matchingWords.map((word) => ({
+    word,
+    distance: levenshteinDistance(query, word),
+  }));
+
+  const sortedWords = wordDistances.sort((a, b) => a.distance - b.distance);
+
+  const similarWords = sortedWords.slice(0, 3).map((result) => result.word);
+  const count = matchingWords.filter((word) => word.toLowerCase() === query.toLowerCase()).length;
+
+  return { similarWords, count };
 }
+
+function createRegexPattern(query) {
+  const escapedQuery = escapeRegExp(query.toLowerCase());
+  return new RegExp(`^[${escapedQuery}]+$`);
+}
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+
+
 
 function addWord(newWord) {
   const normalizedNewWord = newWord.toLowerCase();
@@ -45,4 +103,8 @@ function removeSimilarWord(wordToRemove) {
   }
 }
 
-module.exports = { searchSimilarWords, addWord, removeSimilarWord };
+module.exports = {
+  searchSimilarWords,
+  addWord,
+  removeSimilarWord,
+};

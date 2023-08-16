@@ -6,19 +6,39 @@ import {
   addWord,
   removeSimilarWord,
 } from "../../services/searchApi";
+import Button from "../button/Button";
 
 export default function SearchBar() {
   const [searchResults, setSearchResults] = useState([]);
-  const inputVal = useRef();
+  const [resultCount, setResultCount] = useState(0);
+  let lastInputValue = "";
+  let inputVal = useRef();
 
   const handleSearch = async () => {
-    try {
+    const inputValue = inputVal.current?.value.trim();
+
+    if (!inputValue) {
+      setSearchResults("");
+      setResultCount(0);
+      return;
+    }
+
+
+   const searchTimeout = setTimeout(async () => {
+
+     try {
+      if(lastInputValue === inputVal.current?.value) {return}
       const results = await searchSimilarWords(inputVal.current?.value);
-      setSearchResults(results.results);
+      setSearchResults(results?.results);
+      lastInputValue = inputVal.current?.value;
+      // const count = searchResults.filter((word) => word === inputVal.current?.value).length
+      setResultCount(searchResults.length);
     } catch (error) {
       console.error("Error searching similar words:", error);
     }
-  };
+    clearTimeout(searchTimeout); // Clear previous timeout
+
+  }, 500)};
 
   const handleAddWord = async (e) => {
     e.preventDefault();
@@ -58,7 +78,15 @@ export default function SearchBar() {
     }
   };
 
-  useEffect(() => {}, [searchResults]);
+  const handleKeyPress = (event) => {
+    if (event.key === "Enter") {
+      // Handle the "Enter" key press here
+      event.preventDefault();
+      handleSearch();
+    }
+  };
+
+  useEffect(() => {}, [searchResults, inputVal]);
   return (
     <>
       <ToastContainer />
@@ -71,37 +99,34 @@ export default function SearchBar() {
               onChange={handleSearch}
               ref={inputVal}
               type="text"
-              placeholder="Search..."
+              placeholder="Search text"
+              onKeyDown={handleKeyPress}
             />
-            <button
-              className={styles.closeIcon}
-              onClick={() => setSearchResults("")}
-              type="reset"
-            ></button>
           </div>
+          {searchResults.length > 0 && (
+            <p className={styles.instances}>{resultCount} instances found</p>
+          )}
         </div>
 
         {searchResults.length > 0 && (
           <div className={styles.resultWrapper}>
             <h3>Results:</h3>
             <ul>
-              {searchResults?.map((result, index) => (
-                  <li key={index}>{result}</li>
+              {searchResults?.slice(0, 3).map((result, index) => (
+                <li key={index}>{result}</li>
               ))}
 
-              <div className="row">
-                <button
-                  className={styles.button}
+              <div className={styles.buttonRow}>
+                <Button
+                  content="Update"
+                  type="update"
                   onClick={(e) => handleAddWord(e)}
-                >
-                  Add
-                </button>
-                <button
-                  className={styles.button}
+                />
+                <Button
+                  content="Delete"
+                  type="delete"
                   onClick={(e) => handleRemoveWord(e)}
-                >
-                  Remove
-                </button>
+                />
               </div>
             </ul>
           </div>
