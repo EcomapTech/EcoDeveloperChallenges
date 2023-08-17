@@ -1,11 +1,10 @@
-import SearchBar from "./components/searchbar/SearchBar";
-import 'react-toastify/dist/ReactToastify.css';
-
+import "react-toastify/dist/ReactToastify.css";
+import SideBar from "./components/sideBar/SideBar";
 
 function App() {
   return (
     <div className="App">
-      <SearchBar />
+      <SideBar />
     </div>
   );
 }

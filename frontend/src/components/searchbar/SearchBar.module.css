@@ -56,32 +56,32 @@ width: 264px;
 margin-top: 24px;
 }
 
-/* .closeIcon {
-  border: 1px solid transparent;
-  background-color: transparent;
-  margin: 10px 2px;
-
-}
-
-.closeIcon:hover {
-  background-color: transparent;
-  cursor: pointer;
-}
-
-.closeIcon:after {
-  content: "X";
-  display: block;
-  width: 15px;
-  height: 15px;
-  background-color: #fa9595;
-  padding: 2px;
-  border-radius: 50%;
-  text-align: center;
-  color: white;
-  box-shadow: 0 0 2px #e50f0f;
-} */
-
 .instances{
   text-align: right;
   width: 263px;
+}
+
+.deleteContainer {
+  display: flex;
+padding: 24px;
+flex-direction: column;
+align-items: center;
+gap: 24px;
+align-self: stretch;
+border-radius: 4px;
+border: 1px solid var(--gray-300, #DADDE4);
+width: 264px;
+height: 156px;
+}
+
+.deleteMessage {
+  color: var(--gray-700, #404257);
+text-align: center;
+
+/* Text sm/Regular */
+font-family: Inter;
+font-size: 14px;
+font-style: normal;
+font-weight: 400;
+line-height: 20px; /* 142.857% */
 }
