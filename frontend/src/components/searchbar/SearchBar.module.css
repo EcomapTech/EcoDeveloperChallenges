@@ -1,0 +1,87 @@
+/* searchbar.module.css */
+
+form {
+  padding: 24px 16px;
+  font-size: 14px;
+  color: var(--gray-500, #6c6c7f);
+  width: 320px;
+}
+
+.inputField {
+  margin-top: 5px;
+  display: flex;
+  width: 264px;
+  align-items: flex-start;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--gray-300, #dadde4);
+  background: var(--white, #fff);
+  box-sizing: border-box;
+
+  /* Shadow/xs */
+  box-shadow: 0px 1px 2px 0px rgba(18, 19, 31, 0.05);
+}
+
+ul {
+  display: flex;
+  padding: 5px 0px;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+}
+
+h3 {
+  margin-top: 15px;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+li {
+  margin-left: 5px;
+  margin-top: 5px;
+
+  list-style: none;
+}
+
+.row {
+  display: flex;
+}
+
+.buttonRow {
+  display: flex;
+align-items: center;
+gap: 18px;
+align-self: stretch;
+width: 264px;
+margin-top: 24px;
+}
+
+.instances{
+  text-align: right;
+  width: 263px;
+}
+
+.deleteContainer {
+  display: flex;
+padding: 24px;
+flex-direction: column;
+align-items: center;
+gap: 24px;
+align-self: stretch;
+border-radius: 4px;
+border: 1px solid var(--gray-300, #DADDE4);
+width: 264px;
+height: 156px;
+}
+
+.deleteMessage {
+  color: var(--gray-700, #404257);
+text-align: center;
+
+/* Text sm/Regular */
+font-family: Inter;
+font-size: 14px;
+font-style: normal;
+font-weight: 400;
+line-height: 20px; /* 142.857% */
+}
