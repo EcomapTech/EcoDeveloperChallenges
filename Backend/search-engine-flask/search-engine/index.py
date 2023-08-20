@@ -4,7 +4,7 @@ from gensim.models import Word2Vec
 app = Flask(__name__)
 
 # Load the trained Word2Vec model
-model = Word2Vec.load('./Word2Vec-Training/trained_word2vec_model.model')
+model = Word2Vec.load('./Word2Vec/trained_word2vec_model.model')
 
 # Define the Flask routes
 
