@@ -2,13 +2,8 @@ import React, { useState } from "react";
 import SearchBar from "./SearchBar";
 import SearchResult from "./SearchResult";
 
-const HamburgerMenu = () => {
+const HamburgerMenu = ({ expanded, onToggle }) => {
   const [results, setResults] = useState([]);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
 
   const handleSearch = (query) => {
     // Implement your search logic here
@@ -28,17 +23,17 @@ const HamburgerMenu = () => {
   return (
     <>
       <button
-        className={`menu-button ${menuOpen ? "open" : ""}`}
-        onClick={toggleMenu}
+        className={`menu-button ${expanded ? "open" : ""}`}
+        onClick={onToggle}
       >
         ☰
       </button>
-      <div className={`menu-container ${menuOpen ? "open" : ""}`}>
-        <div className={`menu-content ${menuOpen ? "open" : ""}`}>
-          <h1 className={`app-title ${menuOpen ? "hidden" : ""}`}>
+      <div className={`menu-container ${expanded ? "open" : ""}`}>
+        <div className={`menu-content ${expanded ? "open" : ""}`}>
+          <h1 className={`app-title ${expanded ? "hidden" : ""}`}>
             Search Engine App
           </h1>
-          <div className={`search-container ${menuOpen ? "hidden" : ""}`}>
+          <div className={`search-container ${expanded ? "hidden" : ""}`}>
             <SearchBar
               onSearch={handleSearch}
               onAdd={handleAdd}
