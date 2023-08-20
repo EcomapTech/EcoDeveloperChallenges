@@ -14,7 +14,7 @@ const App = () => {
     <div className="app">
       <HamburgerMenu expanded={menuExpanded} onToggle={toggleMenu} />
       <div className={`text-viewer ${menuExpanded ? "menu-expanded" : ""}`}>
-        <TextViewer />
+        <TextViewer expanded={menuExpanded} />
       </div>
     </div>
   );

@@ -1,61 +1,4 @@
-/* App.css */
-
-/* Reset some default styles */
-body,
-h1,
-h2,
-ul,
-li {
-  margin: 0;
-  padding: 0;
-}
-.app {
-  display: flex;
-}
-
-/* Apply general styles to the entire app */
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Style the hamburger button */
-.menu-button {
-  font-size: 24px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 2;
-  transition: left 0.3s ease-in-out;
-}
-
-.menu-button.open {
-  left: 25%; /* Slide to the right when menu is open */
-}
-
-/* Style the menu container */
-.menu-container {
-  top: 0;
-  left: 0;
-  width: 35%;
-  height: 100vh;
-  transition: left 0.3s ease-in-out;
-  z-index: 1;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  /* background-color: rgba(0, 0, 0, 0.5); */
-}
-
-.menu-container.open {
-  left: 25%; /* Slide to the right when menu is open */
-}
+/* Update your CSS */
 
 /* Style the menu content */
 .menu-content {
@@ -68,53 +11,72 @@ body {
   flex-direction: column;
   justify-content: start;
   padding-top: 10vh;
-  align-items: center;
-  visibility: hidden; /* Hide the content initially */
+  align-items: flex-start; /* Align contents to the left */
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .menu-container.open .menu-content {
-  visibility: visible; /* Show content when menu is open */
+  display: flex; /* Show content when menu is open */
   transform: translateX(0); /* Slide in from the left when menu is open */
+}
+.menu-button {
+  color: blue;
+  z-index: 2;
+}
+/* Style the nav bar when menu is closed */
+.menu-container:not(.open) {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f4f4f4;
+  padding: 10px 20px;
+  margin-bottom: 100px;
+}
+
+/* Style the close button and menu title */
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #f4f4f4;
+}
+
+.menu-close {
+  color: blue;
+  cursor: pointer;
+  padding-left: 150px;
+}
+
+.menu-title {
+  color: blue;
+  font-weight: bold;
 }
 
 /* Style the search bar and buttons */
 .search-container {
-  text-align: center;
-  margin-top: 20px;
-}
-
-input[type="text"] {
-  padding: 5px;
-  margin-right: 5px;
-  border: 1px solid #ccc;
-}
-
-button {
-  padding: 5px 10px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0056b3;
+  text-align: left; /* Align search elements to the left */
+  margin: 20px 30px; /* Add margin for spacing */
 }
 
 /* Style the search results */
 .search-result {
   margin-top: 20px;
+  text-align: left; /* Align search results to the left */
+  padding-left: 30px; /* Add padding from the left */
 }
-
-h2 {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-.menu-container.open {
-  width: 35%; /* Adjust as needed */
-}
-
-.text-viewer.menu-expanded {
+.text-viewer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: 40px 20px;
   margin-left: 35%; /* Width of the expanded menu */
+  margin-right: 15%; /* Space to show hamburger menu when opened */
+  height: 90vh; /* Same height as the menu */
 }

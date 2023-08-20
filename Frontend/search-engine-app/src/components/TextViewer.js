@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import raw from "../assets/corpus/hemingway.txt";
 
-const TextViewer = () => {
+const TextViewer = ({ expanded }) => {
   const [text, setText] = useState("");
 
   useEffect(() => {
@@ -16,7 +16,11 @@ const TextViewer = () => {
       });
   }, []);
 
-  return <div className="text-container">{text}</div>;
+  return (
+    <div className={`text-container ${expanded ? "menu-expanded" : ""}`}>
+      {text}
+    </div>
+  );
 };
 
 export default TextViewer;

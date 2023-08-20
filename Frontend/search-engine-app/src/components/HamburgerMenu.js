@@ -21,29 +21,35 @@ const HamburgerMenu = ({ expanded, onToggle }) => {
   };
 
   return (
-    <>
+    <div className={`menu-container ${expanded ? "open" : ""}`}>
       <button
         className={`menu-button ${expanded ? "open" : ""}`}
         onClick={onToggle}
       >
-        ☰
+        ☰ Menu
       </button>
-      <div className={`menu-container ${expanded ? "open" : ""}`}>
-        <div className={`menu-content ${expanded ? "open" : ""}`}>
-          <h1 className={`app-title ${expanded ? "hidden" : ""}`}>
-            Search Engine App
-          </h1>
-          <div className={`search-container ${expanded ? "hidden" : ""}`}>
-            <SearchBar
-              onSearch={handleSearch}
-              onAdd={handleAdd}
-              onRemove={handleRemove}
-            />
-            <SearchResult results={results} />
+      <div className={`menu-content ${expanded ? "open" : ""}`}>
+        {expanded && (
+          <div className="menu-header">
+            <span className="menu-title">Menu</span>
+            <span className="menu-close" onClick={onToggle}>
+              x
+            </span>
           </div>
+        )}
+        <h1 className={`app-title ${expanded ? "hidden" : ""}`}>
+          Search Engine App
+        </h1>
+        <div className={`search-container ${expanded ? "hidden" : ""}`}>
+          <SearchBar
+            onSearch={handleSearch}
+            onAdd={handleAdd}
+            onRemove={handleRemove}
+          />
+          <SearchResult results={results} />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
