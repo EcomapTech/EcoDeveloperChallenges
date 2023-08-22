@@ -1,6 +1,6 @@
 # ./search-engine/index.py
-from flask import Flask, jsonify, request
 import re
+from flask import Flask, jsonify, request
 import spacy
 import numpy as np
 
@@ -10,7 +10,7 @@ nlp = spacy.load("en_core_web_md")
 
 
 # Constants
-CORPUS_FILE_PATH = "../corpus/hemmingway.txt"
+CORPUS_FILE_PATH = "./corpus/hemingway.txt"
 # Excluded parts of speech
 EXCLUDED_POS = {'CCONJ', 'SCONJ', 'PREP', 'ADP',
                 'DET', 'PUNCT'}
