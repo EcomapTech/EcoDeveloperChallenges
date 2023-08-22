@@ -13,11 +13,25 @@ const App = () => {
     setMenuExpanded(!menuExpanded);
   };
 
+  const performSearch = async (query) => {
+    try {
+      const response = await fetch(`/api/similar_words?query=${query}`);
+      const data = await response.json();
+      return { results: data, count: data.length };
+    } catch (error) {
+      console.error("Error performing search:", error);
+      return { results: [], count: 0 };
+    }
+  };
+
   return (
     <div className="app">
       <NavigationMenuClosed onClick={toggleMenu} />
       {menuExpanded ? (
-        <NavigationMenuOpen searchFunction={() => {}} onClose={toggleMenu} />
+        <NavigationMenuOpen
+          searchFunction={performSearch}
+          onClose={toggleMenu}
+        />
       ) : null}
       <div className="PDF-viewer">
         <PdfViewerComponent document={"hemingway.pdf"} />

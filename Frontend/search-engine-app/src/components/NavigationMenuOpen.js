@@ -1,14 +1,19 @@
-// NavigationMenuOpen.js
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import "./NavigationMenuOpen.css";
 
 const NavigationMenuOpen = ({ searchFunction, onClose }) => {
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [resultCount, setResultCount] = useState(0);
 
-  const handleSearch = () => {
-    searchFunction(query);
+  const handleSearch = async () => {
+    const searchResults = await searchFunction(query);
+    setResults(searchResults.results);
+    setResultCount(searchResults.count);
+    // setQuery(""); // Clear the input field
   };
+
   const handleKeyDown = (event) => {
     if (event.key === "Enter") {
       handleSearch();
@@ -30,11 +35,26 @@ const NavigationMenuOpen = ({ searchFunction, onClose }) => {
         <input
           type="text"
           id="searchInput"
+          className={query ? "input-filled" : ""}
           placeholder="search text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
         />
+        {results.length > 0 && (
+          <div>
+            <p>Number of results: {resultCount}</p>
+            <div>
+              {results.map((result, index) => (
+                <p key={index}>{result}</p>
+              ))}
+            </div>
+            <div style={{ marginTop: "20px" }}>
+              <button id="replace-button">Replace</button>
+              <button id="delete-button">Delete</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+# ./Word2Vec/train_word2vec.py
 import gensim
 from gensim.models import Word2Vec
 from pathlib import Path
@@ -16,6 +17,8 @@ with open(corpus_path, 'r', encoding='utf-8') as file:
     text = file.read()
 
 # Preprocess the text
+
+
 def preprocess_text(text):
     doc = nlp(text)
     tokenized_corpus = [
@@ -23,6 +26,7 @@ def preprocess_text(text):
         for sent in doc.sents
     ]
     return tokenized_corpus
+
 
 # Preprocess the text and train the Word2Vec model
 tokenized_corpus = preprocess_text(text)
