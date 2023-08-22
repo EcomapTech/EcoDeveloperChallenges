@@ -2,23 +2,37 @@
 from flask import Flask, jsonify, request
 import re
 import spacy
+import numpy as np
+
 
 # Load spaCy model with word vectors
 nlp = spacy.load("en_core_web_md")
 
-# Load your corpus and create a list of words
-with open('./corpus/hemingway.txt', 'r') as file:
-    corpus_text = file.read()
-    word_list = corpus_text.split()
 
-excluded_pos = {'CCONJ', 'SCONJ', 'PREP', 'ADP', 'DET', 'PUNCT'}
+# Constants
+CORPUS_FILE_PATH = "../corpus/hemmingway.txt"
+# Excluded parts of speech
+EXCLUDED_POS = {'CCONJ', 'SCONJ', 'PREP', 'ADP',
+                'DET', 'PUNCT'}
+
+
+def load_corpus():
+    with open(CORPUS_FILE_PATH, 'r') as file:
+        corpus_text = file.read()
+        return corpus_text.split()
+
+
+def save_corpus(word_list):
+    with open(CORPUS_FILE_PATH, 'w') as file:
+        file.write(' '.join(word_list))
+
+
+word_list = load_corpus()
 
 app = Flask(__name__)
 
-
 # Define the Flask routes
 
-# Home route
 
 @app.route('/')
 def hello():
@@ -26,14 +40,13 @@ def hello():
     <h1>Welcome to the Search Engine API</h1>
     <p>This API provides the following endpoints:</p>
     <ul>
-        <li><a href="/find_matching_sentences?input=word">/find_matching_sentences?input=word</a> - Find sentences containing a word</li>
-        <li><a href="/similar_words?input=word">/similar_words?input=word</a> - Get similar words to a query word</li>
+        <li><a href="/similar_words?query=word">/similar_words?query=word</a> - Get similar words to a query word</li>
         <li><a href="/add_word" target="_blank">/add_word</a> - Add a new word to the search corpus</li>
         <li><a href="/remove_similar_word?word=target_word">/remove_similar_word?word=target_word</a> - Remove the most similar word to a target word</li>
     </ul>
     """
 
-# Define a route that takes an input word and returns matching sentences
+# Define the Flask routes
 
 
 @app.route('/find_matching_sentences', methods=['GET'])
@@ -65,35 +78,64 @@ def find_matching_sentences():
     return jsonify({"matching_sentences": matching_sentences})
 
 
-@app.route('/similar_words', methods=['GET'])
-def get_similar_words():
-    query_word = request.args.get('input')  # Use 'input' instead of 'query'
+@app.route('/add_word', methods=['POST'])
+def add_word():
+    try:
+        data = request.get_json()
+        new_word = data.get('word')
 
-    # Check if the query word is recognized by spaCy
-    if nlp.vocab[query_word].is_oov:
-        return jsonify({'error': 'Query word is out of vocabulary'})
+        if new_word is None:
+            return jsonify({"error": "Missing 'word' parameter"}), 400
 
-    # Calculate cosine similarities between the query vector and corpus vectors
-    similarities = []
-    for word in word_list:
-        # Check if the corpus word is recognized by spaCy
-        if nlp.vocab[word].is_oov:
-            continue
+        # Add the new word to the corpus
+        word_list.append(new_word)
 
-        sim = nlp(word).similarity(nlp.vocab[query_word])
-        similarities.append((word, sim))
+        return jsonify({"message": f"Word '{new_word}' added to the corpus"}), 201
 
-    # Sort the similarities in descending order
-    similarities.sort(key=lambda x: x[1], reverse=True)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    # Filter out excluded parts of speech and words that are too similar to the query word
-    filtered_similarities = [(word, sim) for word, sim in similarities
-                             if nlp(word)[0].pos_ not in excluded_pos and word != query_word]
 
-    # Get the top 3 most similar words
-    top_similar_words = filtered_similarities[:3]
+@app.route('/remove_similar_word', methods=['GET'])
+def remove_similar_word():
+    try:
+        target_word = request.args.get('word')
 
-    return jsonify({'similar_words': top_similar_words})
+        if target_word is None:
+            return jsonify({"error": "Missing 'word' parameter"}), 400
+
+        # Prioritize exact matches
+        if target_word in word_list:
+            most_similar_word = target_word
+        else:
+            # Convert word indexes to numpy arrays for cosine similarity calculation
+            target_word_index = word_list.index(
+                target_word) if target_word in word_list else -1
+            word_indices = np.arange(len(word_list))
+
+            # Calculate cosine similarities
+            similarities = np.array([1 - np.dot(target_word_index, word_index) / (np.linalg.norm(target_word_index) * np.linalg.norm(word_index))
+                                    for word_index in word_indices])
+
+            most_similar_index = np.argmax(similarities)
+            most_similar_word = word_list[most_similar_index]
+
+        # Remove the most similar word from the corpus
+        if most_similar_word in word_list:
+            word_list.remove(most_similar_word)
+            save_corpus(word_list)  # Save the updated corpus to file
+
+            return jsonify({"message": f"Word '{most_similar_word}' removed from the corpus"}), 200
+        else:
+            return jsonify({"error": "No similar words found in the corpus"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 5000
+
+
+@app.route('/get_corpus', methods=['GET'])
+def get_corpus():
+    return jsonify({"corpus": word_list})
 
 
 if __name__ == '__main__':
