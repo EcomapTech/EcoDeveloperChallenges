@@ -1,82 +1,12 @@
-/* Update your CSS */
+/* App.css */
 
-/* Style the menu content */
-.menu-content {
-  width: 35%; /* 35% of the screen */
-  height: 100%;
-  background-color: #f4f4f4;
-  transition: transform 0.3s ease-in-out;
-  transform: translateX(-100%); /* Initially hidden off the screen */
+.app {
+  background-color: #f5f7f9;
   display: flex;
-  flex-direction: column;
-  justify-content: start;
-  padding-top: 10vh;
-  align-items: flex-start; /* Align contents to the left */
-  position: absolute;
-  top: 0;
-  left: 0;
 }
 
-.menu-container.open .menu-content {
-  display: flex; /* Show content when menu is open */
-  transform: translateX(0); /* Slide in from the left when menu is open */
-}
-.menu-button {
-  color: blue;
-  z-index: 2;
-}
-/* Style the nav bar when menu is closed */
-.menu-container:not(.open) {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f4f4f4;
-  padding: 10px 20px;
-  margin-bottom: 100px;
-}
-
-/* Style the close button and menu title */
-.menu-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background-color: #f4f4f4;
-}
-
-.menu-close {
-  color: blue;
-  cursor: pointer;
-  padding-left: 150px;
-}
-
-.menu-title {
-  color: blue;
-  font-weight: bold;
-}
-
-/* Style the search bar and buttons */
-.search-container {
-  text-align: left; /* Align search elements to the left */
-  margin: 20px 30px; /* Add margin for spacing */
-}
-
-/* Style the search results */
-.search-result {
-  margin-top: 20px;
-  text-align: left; /* Align search results to the left */
-  padding-left: 30px; /* Add padding from the left */
-}
-.text-viewer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: 40px 20px;
-  margin-left: 35%; /* Width of the expanded menu */
-  margin-right: 15%; /* Space to show hamburger menu when opened */
-  height: 90vh; /* Same height as the menu */
+/* Style the PDFViewer */
+.PDF-viewer {
+  width: 75%;
+  margin: 0 auto;
 }
