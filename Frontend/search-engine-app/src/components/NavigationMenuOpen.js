@@ -144,6 +144,9 @@ const NavigationMenuOpen = ({ onClose }) => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
+            disabled={
+              showDeleteConfirmation || isDeleteCompleted || isReplaceCompleted
+            }
           />
           {/* Results section */}
           {showResultsSection &&
@@ -205,6 +208,11 @@ const NavigationMenuOpen = ({ onClose }) => {
                   placeholder="New word"
                   value={newWord}
                   onChange={(e) => setNewWord(e.target.value)}
+                  disabled={
+                    showDeleteConfirmation ||
+                    isDeleteCompleted ||
+                    isReplaceCompleted
+                  }
                 />
                 <div className="replace-container">
                   <button
