@@ -2,6 +2,8 @@
 
 Welcome to my take on the Full Stack Web Developer Challenge! This project showcases my skills as a full-stack developer through a search engine application. Below, you'll find instructions on how to set up both the backend RESTful API and the frontend React app, along with other relevant project details.
 
+This app can allow users to search words from the corpus of text, create new words, update existing words, and delete words.
+
 ## Instructions
 
 Follow the steps below to set up and run both the backend and frontend components of the search engine application.
