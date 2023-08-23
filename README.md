@@ -4,11 +4,12 @@
 
 ## Getting Started
 
-- Clone this repository
-  ```
-  git clone https://github.com/Duncan-Wood/FullStackDeveloperChallenge.git
-    cd FullStackDeveloperChallenge
-  ```
+Clone this repository
+
+```
+git clone https://github.com/Duncan-Wood/FullStackDeveloperChallenge.git
+cd FullStackDeveloperChallenge
+```
 
 ### Backend RESTful API for Search Engine
 
@@ -21,7 +22,7 @@ Python 3.x
 
 ```
 cd Backend
-python -m venv search-engine-venv
+python3 -m venv search-engine-venv
 source search-engine-venv/bin/activate  # On macOS and Linux
 # For Windows Command Prompt:
 # search-engine-venv\Scripts\activate
@@ -29,21 +30,21 @@ source search-engine-venv/bin/activate  # On macOS and Linux
 # search-engine-venv\Scripts\Activate.ps1
 ```
 
-**_ Install the dependencies _**
+**Install the dependencies**
 
 ```
 pip install -r requirements.txt
 python -m spacy download en_core_web_md
 ```
 
-**_ Run the API _**
+**Run the API**
 
 ```
 cd search-engine-flask
 ./bootstrap.sh
 ```
 
-**_ Open the API in browser_**
+**Open the API in browser**
 
 [API Home Page](http://localhost:5000/)
 
