@@ -110,7 +110,7 @@ This will automatically open the app in your default web browser. Alternatively,
 ## Sources
 
 - [ChatGPT](https://chat.openai.com/)
-- [PSPDFKit](https://pspdfkit.com/)
+- [PSPDFKit](https://pspdfkit.com/) (watermark can be removed with purchase)
 - [Stack Overflow](https://stackoverflow.com/)
 - [Spacy](https://spacy.io/)
 - [en-core-web-md](https://spacy.io/models/en)
