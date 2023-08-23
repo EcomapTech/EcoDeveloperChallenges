@@ -101,7 +101,7 @@ def add_word():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/remove_similar_word', methods=['GET'])
+@app.route('/remove_similar_word', methods=['DELETE'])
 def remove_similar_word():
     try:
         target_word = request.args.get('word')

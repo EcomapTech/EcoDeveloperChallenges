@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import "./NavigationMenuOpen.css";
@@ -6,21 +6,19 @@ import "./NavigationMenuOpen.css";
 const NavigationMenuOpen = ({ onClose }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
-  const [randomizedResults, setRandomizedResults] = useState([]);
   const [resultCount, setResultCount] = useState(0);
   const [error, setError] = useState("");
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [isDeleteCompleted, setIsDeleteCompleted] = useState(false);
 
-  useEffect(() => {
-    if (results.length > 0) {
-      // Randomize the order of results
-      const randomized = results.slice();
-      for (let i = randomized.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [randomized[i], randomized[j]] = [randomized[j], randomized[i]];
-      }
-      setRandomizedResults(randomized);
+  const shuffleArray = (array) => {
+    const shuffled = array.slice();
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-  }, [results]);
+    return shuffled;
+  };
 
   const highlightQueryWord = (text) => {
     const queryParts = query.toLowerCase().split(" ");
@@ -40,7 +38,7 @@ const NavigationMenuOpen = ({ onClose }) => {
       for (const part of queryParts) {
         if (text.toLowerCase().startsWith(part, currentIndex)) {
           segments.push(
-            <strong>
+            <strong key={currentIndex}>
               {text.slice(currentIndex, currentIndex + part.length)}
             </strong>
           );
@@ -52,9 +50,7 @@ const NavigationMenuOpen = ({ onClose }) => {
       }
     }
 
-    return segments.map((segment, index) => (
-      <React.Fragment key={index}>{segment}</React.Fragment>
-    ));
+    return segments;
   };
 
   const fetchSearchResults = async () => {
@@ -63,8 +59,11 @@ const NavigationMenuOpen = ({ onClose }) => {
         `http://localhost:5000/find_matching_sentences?input=${query}`
       );
       const matchingSentences = response.data.matching_sentences;
-      setResults(matchingSentences.slice(0, 3));
-      setResultCount(Math.min(matchingSentences.length, 3));
+
+      const randomized = shuffleArray(matchingSentences);
+
+      setResults(randomized);
+      setResultCount(randomized.length);
       setError("");
     } catch (error) {
       setError("An error occurred while fetching results.");
@@ -73,9 +72,30 @@ const NavigationMenuOpen = ({ onClose }) => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    fetchSearchResults();
+  const handleDelete = async () => {
+    setShowDeleteConfirmation(true); // Show the confirmation message
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      fetchSearchResults();
+    }
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const response = await axios.delete(
+        `http://localhost:5000/remove_similar_word?word=${query}`
+      );
+      const message = response.data.message;
+      setShowDeleteConfirmation(false); // Hide the confirmation message
+      setResults([]);
+      setError("");
+      setIsDeleteCompleted(true); // Mark delete as completed
+    } catch (error) {
+      setError("An error occurred while deleting results.");
+    }
   };
 
   return (
@@ -87,7 +107,7 @@ const NavigationMenuOpen = ({ onClose }) => {
         </div>
       </div>
       <div className="input-section">
-        <form onSubmit={handleSubmit}>
+        <form>
           <label htmlFor="searchInput" className="searchLabel">
             Search
           </label>
@@ -98,30 +118,68 @@ const NavigationMenuOpen = ({ onClose }) => {
             placeholder="Search text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
+          {results.length > 0 &&
+            !showDeleteConfirmation &&
+            !isDeleteCompleted && (
+              <div>
+                <p className="instances-count">{resultCount} instances found</p>
+                <p className="results">Results</p>
 
-          {results.length > 0 && (
-            <div>
-              {/* <p>Number of results: {resultCount}</p> */}
-              <p className="instances-count">{resultCount} instances found</p>
-              {resultCount > 0 && <p className="results">Results</p>}
-
-              <div className="results-output">
-                {error && <p>{error}</p>}
-                {randomizedResults.map((result, index) => (
-                  <div key={index}>
-                    {highlightQueryWord(`...${result.context}...`)}
-                  </div>
-                ))}
+                <div className="results-output">
+                  {error && <p>{error}</p>}
+                  {results.slice(0, 3).map((result, index) => (
+                    <div key={index}>
+                      {highlightQueryWord(`...${result.context}...`)}
+                    </div>
+                  ))}
+                </div>
+                <div className="menu-buttons">
+                  <button type="button" className="replace-button">
+                    <img
+                      src={require("../assets/replace.png")}
+                      alt="Menu Icon"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    className="menu-button"
+                    onClick={handleDelete}
+                  >
+                    <img
+                      src={require("../assets/delete.png")}
+                      alt="Menu Icon"
+                    />
+                  </button>
+                </div>
               </div>
-              <div className="menu-buttons">
-                <button id="replace-button">
-                  <img src={require("../assets/replace.png")} alt="Menu Icon" />
-                </button>
-                <button id="delete-button">
+            )}
+
+          {/* Confirmation Message */}
+          {showDeleteConfirmation && (
+            <div className="confirmation-menu">
+              <p className="confirmation-text">
+                Confirm deletion of {resultCount} instances of "{query}"?
+              </p>
+              <div className="menu-buttons confirmation">
+                <button
+                  type="button"
+                  className="menu-buttons"
+                  onClick={confirmDelete} // Use the confirmDelete function
+                >
                   <img src={require("../assets/delete.png")} alt="Menu Icon" />
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Delete Completed Message */}
+          {isDeleteCompleted && (
+            <div>
+              <p className="confirmed-text">
+                All instances of "{query}" have been deleted.
+              </p>
             </div>
           )}
         </form>
