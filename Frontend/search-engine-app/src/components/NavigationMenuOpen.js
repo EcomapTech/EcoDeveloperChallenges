@@ -8,6 +8,10 @@ const NavigationMenuOpen = ({ onClose }) => {
   const [results, setResults] = useState([]);
   const [resultCount, setResultCount] = useState(0);
   const [error, setError] = useState("");
+  const [showResultsSection, setShowResultsSection] = useState(true); // State for showing/hiding results section
+  const [newWord, setNewWord] = useState(""); // New word for replacement
+  const [showReplaceSection, setShowReplaceSection] = useState(false); // State for showing the "Replace with" section
+  const [isReplaceCompleted, setIsReplaceCompleted] = useState(false); // New state for indicating replace completion
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [isDeleteCompleted, setIsDeleteCompleted] = useState(false);
 
@@ -72,10 +76,6 @@ const NavigationMenuOpen = ({ onClose }) => {
     }
   };
 
-  const handleDelete = async () => {
-    setShowDeleteConfirmation(true); // Show the confirmation message
-  };
-
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -83,16 +83,41 @@ const NavigationMenuOpen = ({ onClose }) => {
     }
   };
 
-  const confirmDelete = async () => {
+  const handleReplace = async () => {
     try {
-      const response = await axios.delete(
-        `http://localhost:5000/remove_similar_word?word=${query}`
-      );
-      const message = response.data.message;
-      setShowDeleteConfirmation(false); // Hide the confirmation message
+      await axios.put("http://localhost:5000/replace_word", {
+        old_word: query,
+        new_word: newWord,
+      });
+
+      // Update UI or show a success message if needed
+
       setResults([]);
       setError("");
-      setIsDeleteCompleted(true); // Mark delete as completed
+      setIsDeleteCompleted(false);
+      setShowReplaceSection(false);
+      setIsReplaceCompleted(true);
+
+      // Hide the results section when replace is completed
+      setShowResultsSection(false);
+    } catch (error) {
+      setError("An error occurred while replacing the word.");
+    }
+  };
+  const handleDelete = async () => {
+    setShowDeleteConfirmation(true); // Show the confirmation message
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await axios.delete(
+        `http://localhost:5000/remove_similar_word?word=${query}`
+      );
+
+      setShowDeleteConfirmation(false);
+      setResults([]);
+      setError("");
+      setIsDeleteCompleted(true);
     } catch (error) {
       setError("An error occurred while deleting results.");
     }
@@ -120,9 +145,12 @@ const NavigationMenuOpen = ({ onClose }) => {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
           />
-          {results.length > 0 &&
+          {/* Results section */}
+          {showResultsSection &&
+            results.length > 0 &&
             !showDeleteConfirmation &&
-            !isDeleteCompleted && (
+            !isDeleteCompleted &&
+            !isReplaceCompleted && (
               <div>
                 <p className="instances-count">{resultCount} instances found</p>
                 <p className="results">Results</p>
@@ -136,7 +164,14 @@ const NavigationMenuOpen = ({ onClose }) => {
                   ))}
                 </div>
                 <div className="menu-buttons">
-                  <button type="button" className="replace-button">
+                  <button
+                    type="button"
+                    className="replace-button"
+                    onClick={() => {
+                      setShowReplaceSection(true);
+                      setShowResultsSection(false); // Hide results when "Replace" is clicked
+                    }}
+                  >
                     <img
                       src={require("../assets/replace.png")}
                       alt="Menu Icon"
@@ -155,6 +190,46 @@ const NavigationMenuOpen = ({ onClose }) => {
                 </div>
               </div>
             )}
+
+          {/* Replace with section */}
+          {showReplaceSection && (
+            <div className="replace-section">
+              <label htmlFor="newWordInput" className="searchLabel">
+                Replace with
+              </label>
+              <div className="replace-input">
+                <input
+                  type="text"
+                  id="newWordInput"
+                  className={newWord ? "input-filled" : ""}
+                  placeholder="New word"
+                  value={newWord}
+                  onChange={(e) => setNewWord(e.target.value)}
+                />
+                <div className="replace-container">
+                  <button
+                    type="button"
+                    className="replace-button"
+                    onClick={handleReplace}
+                  >
+                    <img
+                      src={require("../assets/replace-confirm.png")}
+                      alt="Menu Icon"
+                    />
+                  </button>
+                </div>
+              </div>
+              <p className="warning">This cannot be reversed!</p>
+            </div>
+          )}
+          {/* Replace completion */}
+          {isReplaceCompleted && (
+            <div className="confirmation-menu">
+              <p className="confirmation-text">
+                All instances of "{query}" have been replaced with "{newWord}".
+              </p>
+            </div>
+          )}
 
           {/* Confirmation Message */}
           {showDeleteConfirmation && (
