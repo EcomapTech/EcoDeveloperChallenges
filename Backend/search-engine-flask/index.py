@@ -1,6 +1,7 @@
 # ./search-engine/index.py
 import re
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import spacy
 import numpy as np
 
@@ -30,6 +31,8 @@ def save_corpus(word_list):
 word_list = load_corpus()
 
 app = Flask(__name__)
+CORS(app)
+
 
 # Define the Flask routes
 
@@ -40,9 +43,10 @@ def hello():
     <h1>Welcome to the Search Engine API</h1>
     <p>This API provides the following endpoints:</p>
     <ul>
-        <li><a href="/similar_words?query=word">/similar_words?query=word</a> - Get similar words to a query word</li>
+        <li><a href="/find_matching_sentences?input=word">/find_matching_sentences?input=word</a> - Find sentences containing a word</li>
         <li><a href="/add_word" target="_blank">/add_word</a> - Add a new word to the search corpus</li>
         <li><a href="/remove_similar_word?word=target_word">/remove_similar_word?word=target_word</a> - Remove the most similar word to a target word</li>
+        <li><a href="/get_corpus">/get_corpus</a> - Get the current search corpus</li>
     </ul>
     """
 
