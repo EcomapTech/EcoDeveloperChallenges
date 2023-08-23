@@ -1,4 +1,4 @@
-#!/bin/sh
+#./bootstrap.sh
 export FLASK_APP=./index.py
 
 # Activate the existing virtual environment

@@ -2,14 +2,50 @@
 
 ## Instructions
 
-**Setup**
+## Getting Started
 
 - Clone this repository
+  ```
+  git clone https://github.com/Duncan-Wood/FullStackDeveloperChallenge.git
+    cd FullStackDeveloperChallenge
+  ```
 
-**Backend**
+### Backend RESTful API for Search Engine
 
-- start the app by running './bootstrap.sh' in the root directory (search-engine-flask)
-- the app will be running on localhost:5000
+**Prerequisites**
+Before running the API, ensure you have the following installed:
+
+Python 3.x
+
+**Create the Virtual Environment**
+
+```
+cd Backend
+python -m venv search-engine-venv
+source search-engine-venv/bin/activate  # On macOS and Linux
+# For Windows Command Prompt:
+# search-engine-venv\Scripts\activate
+# For Windows PowerShell:
+# search-engine-venv\Scripts\Activate.ps1
+```
+
+**_ Install the dependencies _**
+
+```
+pip install -r requirements.txt
+python -m spacy download en_core_web_md
+```
+
+**_ Run the API _**
+
+```
+cd search-engine-flask
+./bootstrap.sh
+```
+
+**_ Open the API in browser_**
+
+[API Home Page](http://localhost:5000/)
 
 **Frontend**
 
@@ -23,3 +59,7 @@
 - [Spacy](https://spacy.io/) Used for the tokenizer.
 - [Flask](https://flask.palletsprojects.com/en/1.1.x/) Used for the web server.
 - Methods tried to get similar words: Gensim, Spacy, ChatGPT, Scipy, Word2Vek, SKlearn and others.
+
+```
+
+```

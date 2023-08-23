@@ -1,4 +1,5 @@
-Flask==2.3.3
+# FullStackDeveloperChallenge/Backend/requirements.txt
+Flask
 Flask-Cors
-spacy==3.6.1
-numpy==1.25.2
+spacy
+numpy
