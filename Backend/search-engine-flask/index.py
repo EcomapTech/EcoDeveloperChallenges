@@ -46,6 +46,7 @@ def hello():
         <li><a href="/find_matching_sentences?input=word">/find_matching_sentences?input=word</a> - Find sentences containing a word</li>
         <li><a href="/add_word" target="_blank">/add_word</a> - Add a new word to the search corpus</li>
         <li><a href="/remove_similar_word?word=target_word">/remove_similar_word?word=target_word</a> - Remove the most similar word to a target word</li>
+        <li><a href="/replace_word" target="_blank">/replace_word</a> - Replace all occurrences of a word in the search corpus</li>
         <li><a href="/get_corpus">/get_corpus</a> - Get the current search corpus</li>
     </ul>
     """
@@ -91,8 +92,8 @@ def add_word():
         if new_word is None:
             return jsonify({"error": "Missing 'word' parameter"}), 400
 
-        # Add the new word to the corpus
         word_list.append(new_word)
+        save_corpus(word_list)  # Save the updated corpus to file
 
         return jsonify({"message": f"Word '{new_word}' added to the corpus"}), 201
 
@@ -108,33 +109,47 @@ def remove_similar_word():
         if target_word is None:
             return jsonify({"error": "Missing 'word' parameter"}), 400
 
-        # Prioritize exact matches
-        if target_word in word_list:
-            most_similar_word = target_word
-        else:
-            # Convert word indexes to numpy arrays for cosine similarity calculation
-            target_word_index = word_list.index(
-                target_word) if target_word in word_list else -1
-            word_indices = np.arange(len(word_list))
+        removed_count = 0
 
-            # Calculate cosine similarities
-            similarities = np.array([1 - np.dot(target_word_index, word_index) / (np.linalg.norm(target_word_index) * np.linalg.norm(word_index))
-                                    for word_index in word_indices])
+        while target_word in word_list:
+            word_list.remove(target_word)
+            removed_count += 1
 
-            most_similar_index = np.argmax(similarities)
-            most_similar_word = word_list[most_similar_index]
-
-        # Remove the most similar word from the corpus
-        if most_similar_word in word_list:
-            word_list.remove(most_similar_word)
+        if removed_count > 0:
             save_corpus(word_list)  # Save the updated corpus to file
-
-            return jsonify({"message": f"Word '{most_similar_word}' removed from the corpus"}), 200
+            return jsonify({"message": f"Removed {removed_count} occurrences of word '{target_word}' from the corpus"}), 200
         else:
-            return jsonify({"error": "No similar words found in the corpus"}), 404
+            return jsonify({"error": f"No occurrences of word '{target_word}' found in the corpus"}), 404
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 5000
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/replace_word', methods=['PUT'])
+def replace_word():
+    try:
+        data = request.get_json()
+        old_word = data.get('old_word')
+        new_word = data.get('new_word')
+
+        if old_word is None or new_word is None:
+            return jsonify({"error": "Missing 'old_word' or 'new_word' parameter"}), 400
+
+        replaced_count = 0
+
+        for index, word in enumerate(word_list):
+            if word.lower() == old_word.lower():
+                word_list[index] = new_word
+                replaced_count += 1
+
+        if replaced_count > 0:
+            save_corpus(word_list)  # Save the updated corpus to file
+            return jsonify({"message": f"Replaced {replaced_count} occurrences of '{old_word}' with '{new_word}' in the corpus"}), 200
+        else:
+            return jsonify({"error": f"No occurrences of '{old_word}' found in the corpus"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/get_corpus', methods=['GET'])
