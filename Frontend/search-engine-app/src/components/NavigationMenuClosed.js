@@ -1,5 +1,6 @@
 // NavigationMenuClosed.js
-import React from "react";
+// This component represents a closed navigation menu
+
 import "./NavigationMenuClosed.css";
 
 const NavigationMenuClosed = ({ onClick }) => {
@@ -7,6 +8,7 @@ const NavigationMenuClosed = ({ onClick }) => {
     <div className="nav-menu">
       <nav className="nav-open" onClick={onClick}>
         <div className="menu-icon">
+          {/* Displaying a menu icon image */}
           <img src={require("../assets/menu.png")} alt="Menu Icon" />
         </div>
         <div className="menu-text">Menu</div>

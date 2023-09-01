@@ -1,4 +1,4 @@
-import React from "react";
+// This component displays a list of search results
 
 const SearchResult = ({ results }) => {
   return (

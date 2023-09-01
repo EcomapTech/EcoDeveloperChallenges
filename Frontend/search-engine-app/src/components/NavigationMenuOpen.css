@@ -100,9 +100,16 @@ input {
   font-family: "Inter-SemiBold", Helvetica;
   font-size: 14px;
   font-weight: 600;
-  height: 20px;
   letter-spacing: 0;
   line-height: 20px;
+}
+.noResults {
+    height: 20px;
+    color: #6c6c7f;
+    font-family: "Inter-SemiBold", Helvetica;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
 }
 
 .results-output {

@@ -4,16 +4,19 @@ import axios from "axios";
 import "./NavigationMenuOpen.css";
 
 const NavigationMenuOpen = ({ onClose }) => {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
-  const [resultCount, setResultCount] = useState(0);
-  const [error, setError] = useState("");
-  const [showResultsSection, setShowResultsSection] = useState(true); // State for showing/hiding results section
-  const [newWord, setNewWord] = useState(""); // New word for replacement
-  const [showReplaceSection, setShowReplaceSection] = useState(false); // State for showing the "Replace with" section
-  const [isReplaceCompleted, setIsReplaceCompleted] = useState(false); // New state for indicating replace completion
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [isDeleteCompleted, setIsDeleteCompleted] = useState(false);
+  const [state, setState] = useState({
+    query: "",
+    results: [],
+    resultCount: 0,
+    error: "",
+    showResultsSection: true,
+    newWord: "",
+    showReplaceSection: false,
+    isReplaceCompleted: false,
+    showDeleteConfirmation: false,
+    isDeleteCompleted: false,
+    hasSearched: false, // Flag to track if a search has been attempted
+  });
 
   const shuffleArray = (array) => {
     const shuffled = array.slice();
@@ -25,6 +28,7 @@ const NavigationMenuOpen = ({ onClose }) => {
   };
 
   const highlightQueryWord = (text) => {
+    const { query } = state;
     const queryParts = query.toLowerCase().split(" ");
     const segments = [];
     let currentIndex = 0;
@@ -60,19 +64,27 @@ const NavigationMenuOpen = ({ onClose }) => {
   const fetchSearchResults = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/find_matching_sentences?input=${query}`
+        `http://localhost:5000/find_matching_sentences?input=${state.query}`
       );
       const matchingSentences = response.data.matching_sentences;
 
       const randomized = shuffleArray(matchingSentences);
 
-      setResults(randomized);
-      setResultCount(randomized.length);
-      setError("");
+      setState({
+        ...state,
+        results: randomized,
+        resultCount: randomized.length,
+        error: "",
+        hasSearched: true, // Set the flag to true after a search attempt
+      });
     } catch (error) {
-      setError("An error occurred while fetching results.");
-      setResults([]);
-      setResultCount(0);
+      setState({
+        ...state,
+        error: "An error occurred while fetching results.",
+        results: [],
+        resultCount: 0,
+        hasSearched: true, // Set the flag to true after a search attempt
+      });
     }
   };
 
@@ -86,84 +98,97 @@ const NavigationMenuOpen = ({ onClose }) => {
   const handleReplace = async () => {
     try {
       await axios.put("http://localhost:5000/replace_word", {
-        old_word: query,
-        new_word: newWord,
+        old_word: state.query,
+        new_word: state.newWord,
       });
 
       // Update UI or show a success message if needed
 
-      setResults([]);
-      setError("");
-      setIsDeleteCompleted(false);
-      setShowReplaceSection(false);
-      setIsReplaceCompleted(true);
-
-      // Hide the results section when replace is completed
-      setShowResultsSection(false);
+      setState({
+        ...state,
+        results: [],
+        error: "",
+        isDeleteCompleted: false,
+        showReplaceSection: false,
+        isReplaceCompleted: true,
+        showResultsSection: false,
+      });
     } catch (error) {
-      setError("An error occurred while replacing the word.");
+      setState({
+        ...state,
+        error: "An error occurred while replacing the word.",
+      });
     }
   };
+
   const handleDelete = async () => {
-    setShowDeleteConfirmation(true); // Show the confirmation message
+    setState({
+      ...state,
+      showDeleteConfirmation: true,
+    });
   };
 
   const confirmDelete = async () => {
     try {
       await axios.delete(
-        `http://localhost:5000/remove_similar_word?word=${query}`
+        `http://localhost:5000/remove_similar_word?word=${state.query}`
       );
 
-      setShowDeleteConfirmation(false);
-      setResults([]);
-      setError("");
-      setIsDeleteCompleted(true);
+      setState({
+        ...state,
+        showDeleteConfirmation: false,
+        results: [],
+        error: "",
+        isDeleteCompleted: true,
+      });
     } catch (error) {
-      setError("An error occurred while deleting results.");
+      setState({
+        ...state,
+        error: "An error occurred while deleting results.",
+      });
     }
   };
 
-  return (
-    <div className="menu menu-open">
-      <div className="header" onClick={onClose}>
-        <div className="menu-title">Menu</div>
-        <div className="close-icon">
-          <img src={require("../assets/x.png")} alt="Menu Icon" />
-        </div>
+return (
+  <div className="menu menu-open">
+    <div className="header" onClick={onClose}>
+      <div className="menu-title">Menu</div>
+      <div className="close-icon">
+        <img src={require("../assets/x.png")} alt="Menu Icon" />
       </div>
-      <div className="input-section">
-        <form>
-          <label htmlFor="searchInput" className="searchLabel">
-            Search
-          </label>
-          <input
-            type="text"
-            id="searchInput"
-            className={query ? "input-filled" : ""}
-            placeholder="Search text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={
-              showDeleteConfirmation || isDeleteCompleted || isReplaceCompleted
-            }
-          />
-          {/* Results section */}
-          {showResultsSection &&
-            results.length > 0 &&
-            !showDeleteConfirmation &&
-            !isDeleteCompleted &&
-            !isReplaceCompleted && (
-              <div>
-                <p className="instances-count">{resultCount} instances found</p>
+    </div>
+    <div className="input-section">
+      <form>
+        <label htmlFor="searchInput" className="searchLabel">
+          Search
+        </label>
+        <input
+          type="text"
+          id="searchInput"
+          className={state.query ? "input-filled" : ""}
+          placeholder="Search text"
+          value={state.query}
+          onChange={(e) => setState({ ...state, query: e.target.value })}
+          onKeyDown={handleKeyDown}
+          disabled={
+            state.showDeleteConfirmation ||
+            state.isDeleteCompleted ||
+            state.isReplaceCompleted
+          }
+        />
+
+        {/* Results section */}
+        {state.showResultsSection && !state.showDeleteConfirmation && !state.isDeleteCompleted && !state.isReplaceCompleted && (
+          <div>
+            {state.results.length > 0 ? (
+              <>
+                <p className="instances-count">{state.resultCount} instances found</p>
                 <p className="results">Results</p>
 
                 <div className="results-output">
-                  {error && <p>{error}</p>}
-                  {results.slice(0, 3).map((result, index) => (
-                    <div key={index}>
-                      {highlightQueryWord(`...${result.context}...`)}
-                    </div>
+                  {state.error && <p>{state.error}</p>}
+                  {state.results.slice(0, 3).map((result, index) => (
+                    <div key={index}>{highlightQueryWord(`...${result.context}...`)}</div>
                   ))}
                 </div>
                 <div className="menu-buttons">
@@ -171,104 +196,100 @@ const NavigationMenuOpen = ({ onClose }) => {
                     type="button"
                     className="replace-button"
                     onClick={() => {
-                      setShowReplaceSection(true);
-                      setShowResultsSection(false); // Hide results when "Replace" is clicked
+                      setState({ ...state, showReplaceSection: true, showResultsSection: false });
                     }}
                   >
-                    <img
-                      src={require("../assets/replace.png")}
-                      alt="Menu Icon"
-                    />
+                    <img src={require("../assets/replace.png")} alt="Menu Icon" />
                   </button>
-                  <button
-                    type="button"
-                    className="menu-button"
-                    onClick={handleDelete}
-                  >
-                    <img
-                      src={require("../assets/delete.png")}
-                      alt="Menu Icon"
-                    />
+                  <button type="button" className="menu-button" onClick={handleDelete}>
+                    <img src={require("../assets/delete.png")} alt="Menu Icon" />
                   </button>
                 </div>
-              </div>
-            )}
-
-          {/* Replace with section */}
-          {showReplaceSection && (
-            <div className="replace-section">
-              <label htmlFor="newWordInput" className="searchLabel">
-                Replace with
-              </label>
-              <div className="replace-input">
-                <input
-                  type="text"
-                  id="newWordInput"
-                  className={newWord ? "input-filled" : ""}
-                  placeholder="New word"
-                  value={newWord}
-                  onChange={(e) => setNewWord(e.target.value)}
-                  disabled={
-                    showDeleteConfirmation ||
-                    isDeleteCompleted ||
-                    isReplaceCompleted
-                  }
-                />
-                <div className="replace-container">
-                  <button
-                    type="button"
-                    className="replace-button"
-                    onClick={handleReplace}
-                  >
-                    <img
-                      src={require("../assets/replace-confirm.png")}
-                      alt="Menu Icon"
-                    />
-                  </button>
-                </div>
-              </div>
-              <p className="warning">This cannot be reversed!</p>
-            </div>
-          )}
-          {/* Replace completion */}
-          {isReplaceCompleted && (
-            <div className="confirmation-menu">
-              <p className="confirmation-text">
-                All instances of "{query}" have been replaced with "{newWord}".
-              </p>
+              </>
+              ) : state.hasSearched && (
+                // Display "No results found" only if a search has been attempted
+                <p className="noResults">No results found</p>
+              )}
             </div>
           )}
 
-          {/* Confirmation Message */}
-          {showDeleteConfirmation && (
-            <div className="confirmation-menu">
-              <p className="confirmation-text">
-                Confirm deletion of {resultCount} instances of "{query}"?
-              </p>
-              <div className="menu-buttons confirmation">
+
+        {/* Replace with section */}
+        {state.showReplaceSection && (
+          <div className="replace-section">
+            <label htmlFor="newWordInput" className="searchLabel">
+              Replace with
+            </label>
+            <div className="replace-input">
+              <input
+                type="text"
+                id="newWordInput"
+                className={state.newWord ? "input-filled" : ""}
+                placeholder="New word"
+                value={state.newWord}
+                onChange={(e) => setState({ ...state, newWord: e.target.value })}
+                disabled={
+                  state.showDeleteConfirmation ||
+                  state.isDeleteCompleted ||
+                  state.isReplaceCompleted
+                }
+              />
+              <div className="replace-container">
                 <button
                   type="button"
-                  className="menu-buttons"
-                  onClick={confirmDelete} // Use the confirmDelete function
+                  className="replace-button"
+                  onClick={handleReplace}
                 >
-                  <img src={require("../assets/delete.png")} alt="Menu Icon" />
+                  <img
+                    src={require("../assets/replace-confirm.png")}
+                    alt="Menu Icon"
+                  />
                 </button>
               </div>
             </div>
-          )}
+            <p className="warning">This cannot be reversed!</p>
+          </div>
+        )}
+        {/* Replace completion */}
+        {state.isReplaceCompleted && (
+          <div className="confirmation-menu">
+            <p className="confirmation-text">
+              All instances of "{state.query}" have been replaced with "{state.newWord}".
+            </p>
+          </div>
+        )}
 
-          {/* Delete Completed Message */}
-          {isDeleteCompleted && (
-            <div>
-              <p className="confirmed-text">
-                All instances of "{query}" have been deleted.
-              </p>
+        {/* Confirmation Message */}
+        {state.showDeleteConfirmation && (
+          <div className="confirmation-menu">
+            <p className="confirmation-text">
+              Confirm deletion of {state.resultCount} instances of "{state.query}"?
+            </p>
+            <div className="menu-buttons confirmation">
+              <button
+                type="button"
+                className="menu-buttons"
+                onClick={confirmDelete} // Use the confirmDelete function
+              >
+                <img src={require("../assets/delete.png")} alt="Menu Icon" />
+              </button>
             </div>
-          )}
-        </form>
-      </div>
+          </div>
+        )}
+
+        {/* Delete Completed Message */}
+        {state.isDeleteCompleted && (
+          <div>
+            <p className="confirmed-text">
+              All instances of "{state.query}" have been deleted.
+            </p>
+          </div>
+        )}
+      </form>
     </div>
-  );
+  </div>
+);
+
 };
 
 NavigationMenuOpen.propTypes = {
