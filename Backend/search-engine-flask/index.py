@@ -100,7 +100,10 @@ def add_word():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
+# known bug: if you have replaced a word, 
+# then delete the replaced word, the original
+# word with the same name will still appear in
+# the search results
 @app.route('/remove_similar_word', methods=['DELETE'])
 def remove_similar_word():
     try:

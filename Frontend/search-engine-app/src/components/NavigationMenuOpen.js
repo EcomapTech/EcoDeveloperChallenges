@@ -3,7 +3,9 @@ import PropTypes from "prop-types";
 import axios from "axios";
 import "./NavigationMenuOpen.css";
 
+// NavigationMenuOpen component for displaying search results and actions
 const NavigationMenuOpen = ({ onClose }) => {
+  // Component state using useState hook
   const [state, setState] = useState({
     query: "",
     results: [],
@@ -15,9 +17,10 @@ const NavigationMenuOpen = ({ onClose }) => {
     isReplaceCompleted: false,
     showDeleteConfirmation: false,
     isDeleteCompleted: false,
-    hasSearched: false, // Flag to track if a search has been attempted
+    hasSearched: false, 
   });
 
+  // Function to shuffle an array
   const shuffleArray = (array) => {
     const shuffled = array.slice();
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -27,6 +30,7 @@ const NavigationMenuOpen = ({ onClose }) => {
     return shuffled;
   };
 
+  // Function to highlight query words in text
   const highlightQueryWord = (text) => {
     const { query } = state;
     const queryParts = query.toLowerCase().split(" ");
@@ -61,6 +65,7 @@ const NavigationMenuOpen = ({ onClose }) => {
     return segments;
   };
 
+  // Function to fetch search results from the server
   const fetchSearchResults = async () => {
     try {
       const response = await axios.get(
@@ -70,24 +75,27 @@ const NavigationMenuOpen = ({ onClose }) => {
 
       const randomized = shuffleArray(matchingSentences);
 
+      // Update component state with results and set the search flag
       setState({
         ...state,
         results: randomized,
         resultCount: randomized.length,
         error: "",
-        hasSearched: true, // Set the flag to true after a search attempt
+        hasSearched: true, 
       });
     } catch (error) {
+      // Handle errors and update state with an error message
       setState({
         ...state,
         error: "An error occurred while fetching results.",
         results: [],
         resultCount: 0,
-        hasSearched: true, // Set the flag to true after a search attempt
+        hasSearched: true, 
       });
     }
   };
 
+  // Event handler for Enter key press to initiate search
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -95,6 +103,7 @@ const NavigationMenuOpen = ({ onClose }) => {
     }
   };
 
+  // Function to handle word replacement
   const handleReplace = async () => {
     try {
       await axios.put("http://localhost:5000/replace_word", {
@@ -103,7 +112,6 @@ const NavigationMenuOpen = ({ onClose }) => {
       });
 
       // Update UI or show a success message if needed
-
       setState({
         ...state,
         results: [],
@@ -114,6 +122,7 @@ const NavigationMenuOpen = ({ onClose }) => {
         showResultsSection: false,
       });
     } catch (error) {
+      // Handle errors and update state with an error message
       setState({
         ...state,
         error: "An error occurred while replacing the word.",
@@ -121,6 +130,7 @@ const NavigationMenuOpen = ({ onClose }) => {
     }
   };
 
+  // Function to handle deletion confirmation
   const handleDelete = async () => {
     setState({
       ...state,
@@ -128,12 +138,14 @@ const NavigationMenuOpen = ({ onClose }) => {
     });
   };
 
+  // Function to confirm and perform deletion
   const confirmDelete = async () => {
     try {
       await axios.delete(
         `http://localhost:5000/remove_similar_word?word=${state.query}`
       );
 
+      // Update state after successful deletion
       setState({
         ...state,
         showDeleteConfirmation: false,
@@ -142,6 +154,7 @@ const NavigationMenuOpen = ({ onClose }) => {
         isDeleteCompleted: true,
       });
     } catch (error) {
+      // Handle errors and update state with an error message
       setState({
         ...state,
         error: "An error occurred while deleting results.",
@@ -149,149 +162,177 @@ const NavigationMenuOpen = ({ onClose }) => {
     }
   };
 
-return (
-  <div className="menu menu-open">
-    <div className="header" onClick={onClose}>
-      <div className="menu-title">Menu</div>
-      <div className="close-icon">
-        <img src={require("../assets/x.png")} alt="Menu Icon" />
+  // JSX for rendering the component
+  return (
+    <div className="menu menu-open">
+      <div className="header" onClick={onClose}>
+        <div className="menu-title">Menu</div>
+        <div className="close-icon">
+          <img src={require("../assets/x.png")} alt="Menu Icon" />
+        </div>
       </div>
-    </div>
-    <div className="input-section">
-      <form>
-        <label htmlFor="searchInput" className="searchLabel">
-          Search
-        </label>
-        <input
-          type="text"
-          id="searchInput"
-          className={state.query ? "input-filled" : ""}
-          placeholder="Search text"
-          value={state.query}
-          onChange={(e) => setState({ ...state, query: e.target.value })}
-          onKeyDown={handleKeyDown}
-          disabled={
-            state.showDeleteConfirmation ||
-            state.isDeleteCompleted ||
-            state.isReplaceCompleted
-          }
-        />
+      <div className="input-section">
+        <form>
+          <label htmlFor="searchInput" className="searchLabel">
+            Search
+          </label>
+          <input
+            type="text"
+            id="searchInput"
+            className={state.query ? "input-filled" : ""}
+            placeholder="Search text"
+            value={state.query}
+            onChange={(e) => setState({ ...state, query: e.target.value })}
+            onKeyDown={handleKeyDown}
+            disabled={
+              state.showDeleteConfirmation ||
+              state.isDeleteCompleted ||
+              state.isReplaceCompleted
+            }
+          />
 
-        {/* Results section */}
-        {state.showResultsSection && !state.showDeleteConfirmation && !state.isDeleteCompleted && !state.isReplaceCompleted && (
-          <div>
-            {state.results.length > 0 ? (
-              <>
-                <p className="instances-count">{state.resultCount} instances found</p>
-                <p className="results">Results</p>
+          {/* Results section */}
+          {state.showResultsSection &&
+            !state.showDeleteConfirmation &&
+            !state.isDeleteCompleted &&
+            !state.isReplaceCompleted && (
+              <div>
+                {state.results.length > 0 ? (
+                  <>
+                    <p className="instances-count">
+                      {state.resultCount} instances found
+                    </p>
+                    <p className="results">Results</p>
 
-                <div className="results-output">
-                  {state.error && <p>{state.error}</p>}
-                  {state.results.slice(0, 3).map((result, index) => (
-                    <div key={index}>{highlightQueryWord(`...${result.context}...`)}</div>
-                  ))}
-                </div>
-                <div className="menu-buttons">
+                    <div className="results-output">
+                      {state.error && <p>{state.error}</p>}
+                      {state.results.slice(0, 3).map((result, index) => (
+                        <div key={index}>
+                          {highlightQueryWord(`...${result.context}...`)}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="menu-buttons">
+                      <button
+                        type="button"
+                        className="replace-button"
+                        onClick={() => {
+                          setState({
+                            ...state,
+                            showReplaceSection: true,
+                            showResultsSection: false,
+                          });
+                        }}
+                      >
+                        <img
+                          src={require("../assets/replace.png")}
+                          alt="Menu Icon"
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        className="menu-button"
+                        onClick={handleDelete}
+                      >
+                        <img
+                          src={require("../assets/delete.png")}
+                          alt="Menu Icon"
+                        />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  state.hasSearched && (
+                    // Display "No results found" only if a search has been attempted
+                    <p className="noResults">No results found</p>
+                  )
+                )}
+              </div>
+            )}
+
+          {/* Replace with section */}
+          {state.showReplaceSection && (
+            <div className="replace-section">
+              <label htmlFor="newWordInput" className="searchLabel">
+                Replace with
+              </label>
+              <div className="replace-input">
+                <input
+                  type="text"
+                  id="newWordInput"
+                  className={state.newWord ? "input-filled" : ""}
+                  placeholder="New word"
+                  value={state.newWord}
+                  onChange={(e) =>
+                    setState({ ...state, newWord: e.target.value })
+                  }
+                  disabled={
+                    state.showDeleteConfirmation ||
+                    state.isDeleteCompleted ||
+                    state.isReplaceCompleted
+                  }
+                />
+                <div className="replace-container">
                   <button
                     type="button"
                     className="replace-button"
-                    onClick={() => {
-                      setState({ ...state, showReplaceSection: true, showResultsSection: false });
-                    }}
+                    onClick={handleReplace}
                   >
-                    <img src={require("../assets/replace.png")} alt="Menu Icon" />
-                  </button>
-                  <button type="button" className="menu-button" onClick={handleDelete}>
-                    <img src={require("../assets/delete.png")} alt="Menu Icon" />
+                    <img
+                      src={require("../assets/replace-confirm.png")}
+                      alt="Menu Icon"
+                    />
                   </button>
                 </div>
-              </>
-              ) : state.hasSearched && (
-                // Display "No results found" only if a search has been attempted
-                <p className="noResults">No results found</p>
-              )}
+              </div>
+              <p className="warning">This cannot be reversed!</p>
             </div>
           )}
 
+          {/* Replace completion */}
+          {state.isReplaceCompleted && (
+            <div className="confirmation-menu">
+              <p className="confirmation-text">
+                All instances of "{state.query}" have been replaced with "
+                {state.newWord}".
+              </p>
+            </div>
+          )}
 
-        {/* Replace with section */}
-        {state.showReplaceSection && (
-          <div className="replace-section">
-            <label htmlFor="newWordInput" className="searchLabel">
-              Replace with
-            </label>
-            <div className="replace-input">
-              <input
-                type="text"
-                id="newWordInput"
-                className={state.newWord ? "input-filled" : ""}
-                placeholder="New word"
-                value={state.newWord}
-                onChange={(e) => setState({ ...state, newWord: e.target.value })}
-                disabled={
-                  state.showDeleteConfirmation ||
-                  state.isDeleteCompleted ||
-                  state.isReplaceCompleted
-                }
-              />
-              <div className="replace-container">
+          {/* Confirmation Message */}
+          {state.showDeleteConfirmation && (
+            <div className="confirmation-menu">
+              <p className="confirmation-text">
+                Confirm deletion of {state.resultCount} instances of "
+                {state.query}"?
+              </p>
+              <div className="menu-buttons confirmation">
                 <button
                   type="button"
-                  className="replace-button"
-                  onClick={handleReplace}
+                  className="menu-buttons"
+                  onClick={confirmDelete} // Use the confirmDelete function
                 >
-                  <img
-                    src={require("../assets/replace-confirm.png")}
-                    alt="Menu Icon"
-                  />
+                  <img src={require("../assets/delete.png")} alt="Menu Icon" />
                 </button>
               </div>
             </div>
-            <p className="warning">This cannot be reversed!</p>
-          </div>
-        )}
-        {/* Replace completion */}
-        {state.isReplaceCompleted && (
-          <div className="confirmation-menu">
-            <p className="confirmation-text">
-              All instances of "{state.query}" have been replaced with "{state.newWord}".
-            </p>
-          </div>
-        )}
+          )}
 
-        {/* Confirmation Message */}
-        {state.showDeleteConfirmation && (
-          <div className="confirmation-menu">
-            <p className="confirmation-text">
-              Confirm deletion of {state.resultCount} instances of "{state.query}"?
-            </p>
-            <div className="menu-buttons confirmation">
-              <button
-                type="button"
-                className="menu-buttons"
-                onClick={confirmDelete} // Use the confirmDelete function
-              >
-                <img src={require("../assets/delete.png")} alt="Menu Icon" />
-              </button>
+          {/* Delete Completed Message */}
+          {state.isDeleteCompleted && (
+            <div>
+              <p className="confirmed-text">
+                All instances of "{state.query}" have been deleted.
+              </p>
             </div>
-          </div>
-        )}
-
-        {/* Delete Completed Message */}
-        {state.isDeleteCompleted && (
-          <div>
-            <p className="confirmed-text">
-              All instances of "{state.query}" have been deleted.
-            </p>
-          </div>
-        )}
-      </form>
+          )}
+        </form>
+      </div>
     </div>
-  </div>
-);
-
+  );
 };
 
+// he onClose prop must be a required function
 NavigationMenuOpen.propTypes = {
   onClose: PropTypes.func.isRequired,
 };
