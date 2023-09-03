@@ -1,10 +1,11 @@
-#./bootstrap.sh
-export FLASK_APP=./index.py
+#./bin/bash
 
 # Activate the existing virtual environment
 source ../search-engine-venv/bin/activate  # On macOS and Linux
-# search-engine-venv\Scripts\activate  # On Windows (Command Prompt)
-# search-engine-venv\Scripts\Activate.ps1  # On Windows (PowerShell)
+# source ../search-engine-venv/Scripts/activate  # On Windows (Git Bash)
+
+# Set the FLASK_APP environment variable
+export FLASK_APP=./index.py
 
 # Run the Flask application within the activated virtual environment
-flask --debug run -h 0.0.0.0
+flask run -h 0.0.0.0
