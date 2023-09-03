@@ -3,8 +3,6 @@ import PropTypes from "prop-types";
 
 const ReplaceSection = ({
   newWord,
-  showReplaceSection,
-  isReplaceCompleted,
   handleReplace,
   handleNewWordChange,
 }) => {

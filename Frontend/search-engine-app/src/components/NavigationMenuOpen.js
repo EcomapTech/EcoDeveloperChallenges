@@ -4,6 +4,7 @@ import axios from "axios";
 import "./NavigationMenuOpen.css";
 import SearchResults from "./SearchResults";
 import ReplaceSection from "./ReplaceSection";
+import Confirmation from "./Confirmation";
 
 // NavigationMenuOpen component for displaying search results and actions
 const NavigationMenuOpen = ({ onClose }) => {
@@ -119,9 +120,9 @@ const NavigationMenuOpen = ({ onClose }) => {
         results: [],
         error: "",
         isDeleteCompleted: false,
-        showReplaceSection: false,
         isReplaceCompleted: true,
         showResultsSection: false,
+        showReplaceSection: false,
       });
     } catch (error) {
       // Handle errors and update state with an error message
@@ -197,7 +198,7 @@ const NavigationMenuOpen = ({ onClose }) => {
           {state.showResultsSection &&
             !state.showDeleteConfirmation &&
             !state.isDeleteCompleted &&
-            !state.isReplaceCompleted && 
+            !state.isReplaceCompleted &&
             !state.showReplaceSection && (
               <SearchResults
                 results={state.results}
@@ -221,7 +222,7 @@ const NavigationMenuOpen = ({ onClose }) => {
             !state.showResultsSection &&
             !state.showDeleteConfirmation &&
             !state.isDeleteCompleted &&
-            !state.isReplaceCompleted && 
+            !state.isReplaceCompleted &&
             !state.showReplaceSection && (
               <p className="noResults">No results found</p>
             )}
@@ -236,44 +237,17 @@ const NavigationMenuOpen = ({ onClose }) => {
               }
             />
           )}
-
-          {/* Replace completion */}
-          {state.isReplaceCompleted && (
-            <div className="confirmation-menu">
-              <p className="confirmation-text">
-                All instances of "{state.query}" have been replaced with "
-                {state.newWord}".
-              </p>
-            </div>
-          )}
-
-          {/* Confirmation Message */}
-          {state.showDeleteConfirmation && (
-            <div className="confirmation-menu">
-              <p className="confirmation-text">
-                Confirm deletion of {state.resultCount} instances of "
-                {state.query}"?
-              </p>
-              <div className="menu-buttons confirmation">
-                <button
-                  type="button"
-                  className="menu-buttons"
-                  onClick={confirmDelete} // Use the confirmDelete function
-                >
-                  <img src={require("../assets/delete.png")} alt="Menu Icon" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Delete Completed Message */}
-          {state.isDeleteCompleted && (
-            <div>
-              <p className="confirmed-text">
-                All instances of "{state.query}" have been deleted.
-              </p>
-            </div>
-          )}
+          {/* Conditional rendering of the Confirmation component */}
+          <Confirmation
+            showReplaceSection={state.showReplaceSection}
+            isReplaceCompleted={state.isReplaceCompleted}
+            showDeleteConfirmation={state.showDeleteConfirmation}
+            isDeleteCompleted={state.isDeleteCompleted}
+            query={state.query}
+            newWord={state.newWord}
+            resultCount={state.resultCount}
+            confirmDelete={confirmDelete}
+          />
         </form>
       </div>
     </div>
