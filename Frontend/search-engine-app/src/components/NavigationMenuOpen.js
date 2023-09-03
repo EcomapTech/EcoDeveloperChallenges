@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import axios from "axios";
 import "./NavigationMenuOpen.css";
 import SearchResults from "./SearchResults";
+import ReplaceSection from "./ReplaceSection";
 
 // NavigationMenuOpen component for displaying search results and actions
 const NavigationMenuOpen = ({ onClose }) => {
@@ -196,7 +197,8 @@ const NavigationMenuOpen = ({ onClose }) => {
           {state.showResultsSection &&
             !state.showDeleteConfirmation &&
             !state.isDeleteCompleted &&
-            !state.isReplaceCompleted && (
+            !state.isReplaceCompleted && 
+            !state.showReplaceSection && (
               <SearchResults
                 results={state.results}
                 resultCount={state.resultCount}
@@ -217,48 +219,22 @@ const NavigationMenuOpen = ({ onClose }) => {
           {/* Display "No results found" only if a search has been attempted */}
           {state.hasSearched &&
             !state.showResultsSection &&
+            !state.showDeleteConfirmation &&
             !state.isDeleteCompleted &&
-            !state.isReplaceCompleted && (
+            !state.isReplaceCompleted && 
+            !state.showReplaceSection && (
               <p className="noResults">No results found</p>
             )}
 
           {/* Replace with section */}
           {state.showReplaceSection && (
-            <div className="replace-section">
-              <label htmlFor="newWordInput" className="searchLabel">
-                Replace with
-              </label>
-              <div className="replace-input">
-                <input
-                  type="text"
-                  id="newWordInput"
-                  className={state.newWord ? "input-filled" : ""}
-                  placeholder="New word"
-                  value={state.newWord}
-                  onChange={(e) =>
-                    setState({ ...state, newWord: e.target.value })
-                  }
-                  disabled={
-                    state.showDeleteConfirmation ||
-                    state.isDeleteCompleted ||
-                    state.isReplaceCompleted
-                  }
-                />
-                <div className="replace-container">
-                  <button
-                    type="button"
-                    className="replace-button"
-                    onClick={handleReplace}
-                  >
-                    <img
-                      src={require("../assets/replace-confirm.png")}
-                      alt="Menu Icon"
-                    />
-                  </button>
-                </div>
-              </div>
-              <p className="warning">This cannot be reversed!</p>
-            </div>
+            <ReplaceSection
+              newWord={state.newWord}
+              handleReplace={handleReplace}
+              handleNewWordChange={(e) =>
+                setState({ ...state, newWord: e.target.value })
+              }
+            />
           )}
 
           {/* Replace completion */}
