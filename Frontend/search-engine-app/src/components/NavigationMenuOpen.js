@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useCallback } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import "./NavigationMenuOpen.css";
@@ -6,24 +6,27 @@ import SearchResults from "./SearchResults";
 import ReplaceSection from "./ReplaceSection";
 import Confirmation from "./Confirmation";
 
+// Constants
+const API_BASE_URL = "http://localhost:5000";
+
 // NavigationMenuOpen component for displaying search results and actions
 const NavigationMenuOpen = ({ onClose }) => {
   // Component state using useState hook
   const [state, setState] = useState({
-    query: "",
-    results: [],
-    resultCount: 0,
-    error: "",
-    showResultsSection: true,
-    newWord: "",
-    showReplaceSection: false,
-    isReplaceCompleted: false,
-    showDeleteConfirmation: false,
-    isDeleteCompleted: false,
-    hasSearched: false,
+    query: "", // The search query.
+    results: [], // The search results.
+    resultCount: 0, // The number of results.
+    error: "", // The error message.
+    showResultsSection: true, // Flag to show/hide results section.
+    newWord: "", // The new word to replace the query word.
+    showReplaceSection: false, // Flag to show/hide replace section.
+    isReplaceCompleted: false, // Flag to show/hide replace confirmation.
+    showDeleteConfirmation: false, // Flag to show/hide delete confirmation.
+    isDeleteCompleted: false, // Flag to show/hide delete confirmation.
+    hasSearched: false, // Flag to indicate if a search has been attempted.
   });
 
-  // Function to shuffle an array
+  // Function to shuffle results array
   const shuffleArray = (array) => {
     const shuffled = array.slice();
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -33,7 +36,7 @@ const NavigationMenuOpen = ({ onClose }) => {
     return shuffled;
   };
 
-  // Function to highlight query words in text
+  // Function to highlight query words in text from results
   const highlightQueryWord = (text) => {
     const { query } = state;
     const queryParts = query.toLowerCase().split(" ");
@@ -41,17 +44,21 @@ const NavigationMenuOpen = ({ onClose }) => {
     let currentIndex = 0;
 
     while (currentIndex < text.length) {
+      // Find the start index of the first query word occurrence
       const startIdx = text.toLowerCase().indexOf(queryParts[0], currentIndex);
       if (startIdx === -1) {
+        // If no more occurrences found, add the remaining text and exit
         segments.push(text.slice(currentIndex));
         break;
       }
 
+      // Add text before the query word
       segments.push(text.slice(currentIndex, startIdx));
       currentIndex = startIdx;
 
       for (const part of queryParts) {
         if (text.toLowerCase().startsWith(part, currentIndex)) {
+          // Highlight the query word with a <strong> element
           segments.push(
             <strong key={currentIndex}>
               {text.slice(currentIndex, currentIndex + part.length)}
@@ -59,6 +66,7 @@ const NavigationMenuOpen = ({ onClose }) => {
           );
           currentIndex += part.length;
         } else {
+          // Add non-query word text
           segments.push(text[currentIndex]);
           currentIndex += 1;
         }
@@ -69,33 +77,40 @@ const NavigationMenuOpen = ({ onClose }) => {
   };
 
   // Function to fetch search results from the server
-  const fetchSearchResults = async () => {
+  const fetchSearchResults = useCallback(async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/find_matching_sentences?input=${state.query}`
+        `${API_BASE_URL}/find_matching_sentences?input=${state.query}`
       );
       const matchingSentences = response.data.matching_sentences;
 
       const randomized = shuffleArray(matchingSentences);
 
-      // Update component state with results and set the search flag
-      setState({
-        ...state,
+      // Update component state with results and set the search flag using functional update form
+      setState((prevState) => ({
+        ...prevState,
         results: randomized,
         resultCount: randomized.length,
         error: "",
         hasSearched: true,
-      });
+      }));
     } catch (error) {
-      // Handle errors and update state with an error message
-      setState({
-        ...state,
-        error: "An error occurred while fetching results.",
-        results: [],
-        resultCount: 0,
-        hasSearched: true,
-      });
+      handleSearchError(error);
     }
+  }, [state.query]);
+
+  const handleSearchError = (error) => {
+    const errorMessage = error.response
+      ? error.response.data.error
+      : "An error occurred while fetching results.";
+
+    setState((prevState) => ({
+      ...prevState,
+      error: errorMessage,
+      results: [],
+      resultCount: 0,
+      hasSearched: true,
+    }));
   };
 
   // Event handler for Enter key press to initiate search
@@ -109,7 +124,7 @@ const NavigationMenuOpen = ({ onClose }) => {
   // Function to handle word replacement
   const handleReplace = async () => {
     try {
-      await axios.put("http://localhost:5000/replace_word", {
+      await axios.put(`${API_BASE_URL}/replace_word`, {
         old_word: state.query,
         new_word: state.newWord,
       });
@@ -125,12 +140,19 @@ const NavigationMenuOpen = ({ onClose }) => {
         showReplaceSection: false,
       });
     } catch (error) {
-      // Handle errors and update state with an error message
-      setState({
-        ...state,
-        error: "An error occurred while replacing the word.",
-      });
+      handleReplaceError(error);
     }
+  };
+
+  const handleReplaceError = (error) => {
+    const errorMessage = error.response
+      ? error.response.data.error
+      : "An error occurred while replacing the word.";
+
+    setState({
+      ...state,
+      error: errorMessage,
+    });
   };
 
   // Function to handle deletion confirmation
@@ -145,7 +167,7 @@ const NavigationMenuOpen = ({ onClose }) => {
   const confirmDelete = async () => {
     try {
       await axios.delete(
-        `http://localhost:5000/remove_similar_word?word=${state.query}`
+        `${API_BASE_URL}/remove_similar_word?word=${state.query}`
       );
 
       // Update state after successful deletion
@@ -160,12 +182,28 @@ const NavigationMenuOpen = ({ onClose }) => {
       // Handle errors and update state with an error message
       setState({
         ...state,
-        error: "An error occurred while deleting results.",
+        error: error.response
+          ? error.response.data.error
+          : "An error occurred while deleting results.",
       });
     }
   };
+  // Variables for readability
+  const shouldShowResultsSection =
+    state.showResultsSection &&
+    !state.showDeleteConfirmation &&
+    !state.isDeleteCompleted &&
+    !state.isReplaceCompleted &&
+    !state.showReplaceSection;
 
-  // JSX for rendering the component
+  const hasNoResults =
+    state.hasSearched &&
+    !state.showResultsSection &&
+    !state.showDeleteConfirmation &&
+    !state.isDeleteCompleted &&
+    !state.isReplaceCompleted &&
+    !state.showReplaceSection;
+
   return (
     <div className="menu menu-open">
       <div className="header" onClick={onClose}>
@@ -194,40 +232,26 @@ const NavigationMenuOpen = ({ onClose }) => {
             }
           />
 
-          {/* Results section */}
-          {state.showResultsSection &&
-            !state.showDeleteConfirmation &&
-            !state.isDeleteCompleted &&
-            !state.isReplaceCompleted &&
-            !state.showReplaceSection && (
-              <SearchResults
-                results={state.results}
-                resultCount={state.resultCount}
-                error={state.error}
-                hasSearched={state.hasSearched}
-                onReplace={() => {
-                  setState({
-                    ...state,
-                    showReplaceSection: true,
-                    showResultsSection: false,
-                  });
-                }}
-                onDelete={handleDelete}
-                highlightQueryWord={highlightQueryWord}
-              />
-            )}
+          {shouldShowResultsSection && (
+            <SearchResults
+              results={state.results}
+              resultCount={state.resultCount}
+              error={state.error}
+              hasSearched={state.hasSearched}
+              onReplace={() => {
+                setState({
+                  ...state,
+                  showReplaceSection: true,
+                  showResultsSection: false,
+                });
+              }}
+              onDelete={handleDelete}
+              highlightQueryWord={highlightQueryWord}
+            />
+          )}
 
-          {/* Display "No results found" only if a search has been attempted */}
-          {state.hasSearched &&
-            !state.showResultsSection &&
-            !state.showDeleteConfirmation &&
-            !state.isDeleteCompleted &&
-            !state.isReplaceCompleted &&
-            !state.showReplaceSection && (
-              <p className="noResults">No results found</p>
-            )}
+          {hasNoResults && <p className="noResults">No results found</p>}
 
-          {/* Replace with section */}
           {state.showReplaceSection && (
             <ReplaceSection
               newWord={state.newWord}
@@ -237,7 +261,7 @@ const NavigationMenuOpen = ({ onClose }) => {
               }
             />
           )}
-          {/* Conditional rendering of the Confirmation component */}
+
           <Confirmation
             showReplaceSection={state.showReplaceSection}
             isReplaceCompleted={state.isReplaceCompleted}
