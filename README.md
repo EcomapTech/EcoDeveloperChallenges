@@ -106,6 +106,7 @@ This will automatically open the app in your default web browser. Alternatively,
 ## Known Issues
 
 - after much trial and error using technologies like Gensim, Word2Vec, Spacy, and others, I struggled to create a function that accurately produces similar words to a given word. I was able to create a function that returns similar words, but the results are not very accurate. I would like to continue working on this function to improve its accuracy.
+- bug: if you have replaced a word, then delete the replaced word, the original word with the same name will still appear in the search results
 
 ## Sources
 

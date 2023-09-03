@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import "./NavigationMenuOpen.css";
+import SearchResults from "./SearchResults";
 
 // NavigationMenuOpen component for displaying search results and actions
 const NavigationMenuOpen = ({ onClose }) => {
@@ -17,7 +18,7 @@ const NavigationMenuOpen = ({ onClose }) => {
     isReplaceCompleted: false,
     showDeleteConfirmation: false,
     isDeleteCompleted: false,
-    hasSearched: false, 
+    hasSearched: false,
   });
 
   // Function to shuffle an array
@@ -81,7 +82,7 @@ const NavigationMenuOpen = ({ onClose }) => {
         results: randomized,
         resultCount: randomized.length,
         error: "",
-        hasSearched: true, 
+        hasSearched: true,
       });
     } catch (error) {
       // Handle errors and update state with an error message
@@ -90,7 +91,7 @@ const NavigationMenuOpen = ({ onClose }) => {
         error: "An error occurred while fetching results.",
         results: [],
         resultCount: 0,
-        hasSearched: true, 
+        hasSearched: true,
       });
     }
   };
@@ -196,58 +197,29 @@ const NavigationMenuOpen = ({ onClose }) => {
             !state.showDeleteConfirmation &&
             !state.isDeleteCompleted &&
             !state.isReplaceCompleted && (
-              <div>
-                {state.results.length > 0 ? (
-                  <>
-                    <p className="instances-count">
-                      {state.resultCount} instances found
-                    </p>
-                    <p className="results">Results</p>
+              <SearchResults
+                results={state.results}
+                resultCount={state.resultCount}
+                error={state.error}
+                hasSearched={state.hasSearched}
+                onReplace={() => {
+                  setState({
+                    ...state,
+                    showReplaceSection: true,
+                    showResultsSection: false,
+                  });
+                }}
+                onDelete={handleDelete}
+                highlightQueryWord={highlightQueryWord}
+              />
+            )}
 
-                    <div className="results-output">
-                      {state.error && <p>{state.error}</p>}
-                      {state.results.slice(0, 3).map((result, index) => (
-                        <div key={index}>
-                          {highlightQueryWord(`...${result.context}...`)}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="menu-buttons">
-                      <button
-                        type="button"
-                        className="replace-button"
-                        onClick={() => {
-                          setState({
-                            ...state,
-                            showReplaceSection: true,
-                            showResultsSection: false,
-                          });
-                        }}
-                      >
-                        <img
-                          src={require("../assets/replace.png")}
-                          alt="Menu Icon"
-                        />
-                      </button>
-                      <button
-                        type="button"
-                        className="menu-button"
-                        onClick={handleDelete}
-                      >
-                        <img
-                          src={require("../assets/delete.png")}
-                          alt="Menu Icon"
-                        />
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  state.hasSearched && (
-                    // Display "No results found" only if a search has been attempted
-                    <p className="noResults">No results found</p>
-                  )
-                )}
-              </div>
+          {/* Display "No results found" only if a search has been attempted */}
+          {state.hasSearched &&
+            !state.showResultsSection &&
+            !state.isDeleteCompleted &&
+            !state.isReplaceCompleted && (
+              <p className="noResults">No results found</p>
             )}
 
           {/* Replace with section */}
