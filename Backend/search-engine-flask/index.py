@@ -1,44 +1,47 @@
-# ./search-engine/index.py
+#./index.py
+"""Search Engine API"""
 import re
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import spacy
-import numpy as np
 
+# Constants
+CORPUS_FILE_PATH = "./corpus/hemingway.txt"
+CONTEXT_SIZE = 30
+EXCLUDED_POS = {'CCONJ', 'SCONJ', 'PREP', 'ADP', 'DET', 'PUNCT'}
 
 # Load spaCy model with word vectors
 nlp = spacy.load("en_core_web_md")
 
-
-# Constants
-CORPUS_FILE_PATH = "./corpus/hemingway.txt"
-# Excluded parts of speech
-EXCLUDED_POS = {'CCONJ', 'SCONJ', 'PREP', 'ADP',
-                'DET', 'PUNCT'}
-
-
-def load_corpus():
-    with open(CORPUS_FILE_PATH, 'r') as file:
-        corpus_text = file.read()
-        return corpus_text.split()
-
-
-def save_corpus(word_list):
-    with open(CORPUS_FILE_PATH, 'w') as file:
-        file.write(' '.join(word_list))
-
-
-word_list = load_corpus()
-
 app = Flask(__name__)
 CORS(app)
 
+def load_corpus(file_path):
+    """Load the corpus from a text file"""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            corpus_text = file.read()
+            return corpus_text.split()
+    except FileNotFoundError as exc:
+        raise FileNotFoundError("Text file not found") from exc
+
+def save_corpus(file_path, new_word_list, encoding='utf-8'):
+    """Save the corpus to a text file"""
+    global word_list  # pylint: disable=global-statement
+    word_list = new_word_list  # Update the global variable
+    try:
+        with open(file_path, 'w', encoding=encoding) as file:
+            file.write(' '.join(new_word_list))
+    except FileNotFoundError as exc:
+        raise FileNotFoundError("Text file not found") from exc
+    
+word_list = load_corpus(CORPUS_FILE_PATH)
 
 # Define the Flask routes
 
-
 @app.route('/')
 def hello():
+    """Return a friendly HTTP greeting."""
     return """
     <h1>Welcome to the Search Engine API</h1>
     <p>This API provides the following endpoints:</p>
@@ -51,17 +54,15 @@ def hello():
     </ul>
     """
 
-# Define the Flask routes
-
-
 @app.route('/find_matching_sentences', methods=['GET'])
 def find_matching_sentences():
+    """Find sentences containing a word"""
     input_word = request.args.get('input')
     if not input_word:
         return jsonify({"error": "Input word not provided"})
 
     try:
-        with open('./corpus/hemingway.txt', 'r') as file:
+        with open('./corpus/hemingway.txt', 'r', encoding='utf-8') as file:  # Specify the encoding
             hemingway = file.read()
     except FileNotFoundError:
         return jsonify({"error": "Text file not found"})
@@ -70,7 +71,7 @@ def find_matching_sentences():
     matching_sentences = []
 
     for sentence in sentences:
-        if re.search(r'\b{}\b'.format(input_word), sentence, re.IGNORECASE):
+        if re.search(rf'\b{input_word}\b', sentence, re.IGNORECASE):
             match_index = sentence.lower().index(input_word.lower())
             context_size = 30
             context_start = max(match_index - context_size, 0)
@@ -85,6 +86,7 @@ def find_matching_sentences():
 
 @app.route('/add_word', methods=['POST'])
 def add_word():
+    """Add a new word to the corpus"""
     try:
         data = request.get_json()
         new_word = data.get('word')
@@ -93,12 +95,17 @@ def add_word():
             return jsonify({"error": "Missing 'word' parameter"}), 400
 
         word_list.append(new_word)
-        save_corpus(word_list)  # Save the updated corpus to file
+        save_corpus(CORPUS_FILE_PATH, word_list)  # Pass file_path and word_list
 
         return jsonify({"message": f"Word '{new_word}' added to the corpus"}), 201
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except FileNotFoundError as exc:
+        return jsonify({"error": f"File not found: {exc}"}), 404
+    except IOError as exc:
+        return jsonify({"error": f"IO error: {exc}"}), 500
+    except Exception as exc: # pylint: disable=W0718
+        return jsonify({"error": f"An unexpected error occurred: {exc}"}), 500
+
 
 # known bug: if you have replaced a word, 
 # then delete the replaced word, the original
@@ -106,6 +113,7 @@ def add_word():
 # the search results
 @app.route('/remove_similar_word', methods=['DELETE'])
 def remove_similar_word():
+    """Remove the most similar word to a target word"""
     try:
         target_word = request.args.get('word')
 
@@ -119,17 +127,22 @@ def remove_similar_word():
             removed_count += 1
 
         if removed_count > 0:
-            save_corpus(word_list)  # Save the updated corpus to file
+            save_corpus(CORPUS_FILE_PATH, word_list)
             return jsonify({"message": f"Removed {removed_count} occurrences of word '{target_word}' from the corpus"}), 200
         else:
             return jsonify({"error": f"No occurrences of word '{target_word}' found in the corpus"}), 404
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except KeyError as exc:
+        return jsonify({"error": f"Key error: {exc}"}), 400
+    except ValueError as exc:
+        return jsonify({"error": f"Value error: {exc}"}), 400
+    except Exception as exc: # pylint: disable=W0718
+        return jsonify({"error": f"An unexpected error occurred: {exc}"}), 500
 
 
 @app.route('/replace_word', methods=['PUT'])
 def replace_word():
+    """Replace all occurrences of a word in the corpus"""
     try:
         data = request.get_json()
         old_word = data.get('old_word')
@@ -146,17 +159,25 @@ def replace_word():
                 replaced_count += 1
 
         if replaced_count > 0:
-            save_corpus(word_list)  # Save the updated corpus to file
+            save_corpus(CORPUS_FILE_PATH, word_list)
             return jsonify({"message": f"Replaced {replaced_count} occurrences of '{old_word}' with '{new_word}' in the corpus"}), 200
         else:
             return jsonify({"error": f"No occurrences of '{old_word}' found in the corpus"}), 404
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except KeyError as exc:
+        return jsonify({"error": f"Key error: {exc}"}), 400
+    except TypeError as exc:
+        return jsonify({"error": f"Type error: {exc}"}), 400
+    except IndexError as exc:
+        return jsonify({"error": f"Index error: {exc}"}), 400
+    except Exception as exc: # pylint: disable=W0718
+        return jsonify({"error": f"An unexpected error occurred: {exc}"}), 500
+
 
 
 @app.route('/get_corpus', methods=['GET'])
 def get_corpus():
+    """Get the current corpus"""
     return jsonify({"corpus": word_list})
 
 
