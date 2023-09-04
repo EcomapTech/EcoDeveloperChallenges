@@ -246,32 +246,43 @@ def remove_similar_word():
 def replace_word():
     """
     Replace all occurrences of a word in the corpus.
-    Expects a JSON object with 'old_word' and ' new_word' fields to specify the replacement.
+
+    Expects a JSON object with 'old_word' and 'new_word' fields to specify the replacement.
     """
     try:
         data = request.get_json()
         old_word = data.get('old_word')
         new_word = data.get('new_word')
 
-        if old_word is None or new_word is None:
-            return jsonify({"error": "Missing 'old_word' or 'new_word' parameter"}), 400
+        # Validate old_word and new_word using the input validation function
+        validation_error_old = validate_input_string(old_word, 'old word')
+        validation_error_new = validate_input_string(new_word, 'new word')
+
+        if validation_error_old:
+            return jsonify({"error": validation_error_old}), 400
+
+        if validation_error_new:
+            return jsonify({"error": validation_error_new}), 400
 
         replaced_count = 0
 
+        # Replace all occurrences of old_word with new_word in the corpus
         for index, word in enumerate(word_list):
             if word.lower() == old_word.lower():
                 word_list[index] = new_word
                 replaced_count += 1
 
+        save_corpus(CORPUS_FILE_PATH, word_list)
+
         if replaced_count > 0:
-            save_corpus(CORPUS_FILE_PATH, word_list)  # Save the updated corpus to file
-            return jsonify({"message": f"Replaced {replaced_count} occurrences of '{old_word}' with '{new_word}' in the corpus"}), 200
-        else:
-            return jsonify({"error": f"No occurrences of '{old_word}' found in the corpus"}), 404
+            return jsonify({"message": f"Replaced {replaced_count} \
+                            occurrences of '{old_word}' with '{new_word}' in the corpus"}), 200
+        return jsonify({"error": f"No occurrences of '{old_word}' found in the corpus"}), 404
 
-    except Exception as exception: # pylint: disable=W0718
-        return jsonify({"error": str(exception)}), 500
-
+    except Exception as exc: # pylint: disable=W0718
+        logging.error(
+            "An unexpected error occurred while replacing a word: %s", exc)
+        return jsonify({"error": f"An unexpected error occurred: {exc}"}), 500
 
 @app.route('/get_corpus', methods=['GET'])
 def get_corpus():
