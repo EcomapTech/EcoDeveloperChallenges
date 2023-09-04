@@ -213,14 +213,9 @@ def remove_similar_word():
             word_list.remove(target_word)
             removed_count += 1
 
+        save_corpus(CORPUS_FILE_PATH, word_list)
+
         if removed_count > 0:
-            saved_word_list = save_corpus(CORPUS_FILE_PATH, word_list)
-
-            if saved_word_list is None:
-                logging.error(
-                    "Failed to save the updated corpus while removing a similar word.")
-                return jsonify({"error": "Failed to save the updated corpus"}), 500
-
             message = f"Removed {removed_count} occurrences of word '{target_word}' from the corpus"
             return jsonify({"message": message}), 200
 
@@ -268,16 +263,13 @@ def replace_word():
                 word_list[index] = new_word
                 replaced_count += 1
 
-        if replaced_count > 0:
-            saved_word_list = save_corpus(CORPUS_FILE_PATH, word_list)
+        save_corpus(CORPUS_FILE_PATH, word_list)
 
-            if saved_word_list is None:
-                logging.error(
-                    "Failed to save the updated corpus while replacing a word.")
-                return jsonify({"error": "Failed to save the updated corpus"}), 500
+        if replaced_count > 0:
             return jsonify({"message": f"Replaced {replaced_count} \
                             occurrences of '{old_word}' with '{new_word}' in the corpus"}), 200
         return jsonify({"error": f"No occurrences of '{old_word}' found in the corpus"}), 404
+
     except Exception as exc: # pylint: disable=W0718
         logging.error(
             "An unexpected error occurred while replacing a word: %s", exc)
