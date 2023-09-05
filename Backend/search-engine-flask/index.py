@@ -6,7 +6,7 @@ import logging
 import spacy
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from .config import CORPUS_FILE_PATH, CONTEXT_SIZE
+from .config import CORPUS_FILE_PATH, CONTEXT_SIZE, ERROR_MESSAGES
 # from config import EXCLUDED_POS
 
 # Load spaCy model with word vectors
@@ -93,6 +93,15 @@ def validate_input_string(input_value, field_name):
         return f"Invalid or missing {field_name}"
     return None
 
+# Centralized error handler
+def handle_error(error_type):
+    """ 
+    Return a JSON response for a given error type.
+    Types are: invalid_input, file_not_found, internal_error, and not_found_in_corpus
+    """
+    error_info = ERROR_MESSAGES.get(error_type, ERROR_MESSAGES['internal_error'])
+    return jsonify({"error": error_info['message']}), error_info['status_code']
+
 # Define the Flask routes
 
 # Route for a friendly greeting
@@ -124,23 +133,19 @@ def find_matching_sentences():
     """
     input_word = request.args.get('input')
 
-    # Validate input_word using the input validation function
-    validation_error = validate_input_string(input_word, 'input word')
-    if validation_error:
-        return jsonify({"error": validation_error}), 400
-
     try:
+        # Validate input_word using the input validation function
+        validation_error = validate_input_string(input_word, 'input word')
+        if validation_error:
+            raise ValueError(validation_error)
+
         with open(CORPUS_FILE_PATH, 'r', encoding='utf-8') as file:
             hemingway = file.read()
-    except FileNotFoundError as exc:
-        logging.error("Error reading corpus file: %s", exc)
-        return jsonify({"error": "Text file not found"}), 404
 
-    sentences = re.split(r'(?<=[.!?])\s+', hemingway)
-    matching_sentences = []
+        sentences = re.split(r'(?<=[.!?])\s+', hemingway)
+        matching_sentences = []
 
-    for sentence in sentences:
-        try:
+        for sentence in sentences:
             if re.search(rf'\b{input_word}\b', sentence, re.IGNORECASE):
                 match_index = sentence.lower().index(input_word.lower())
                 context_start = max(match_index - CONTEXT_SIZE, 0)
@@ -148,10 +153,12 @@ def find_matching_sentences():
                 context = sentence[context_start:context_end]
                 context = context.replace("\n", " ").strip()
                 matching_sentences.append({"context": context})
-        except ValueError as exc:
-            logging.warning("Error processing sentence: %s", exc)
 
-    return jsonify({"matching_sentences": matching_sentences})
+        return jsonify({"matching_sentences": matching_sentences})
+
+    except Exception as exc: # pylint: disable=W0718
+        logging.warning("Error processing request: %s", exc)
+        return handle_error('internal_error')
 
 
 # Route to add a new word to the corpus
@@ -167,34 +174,31 @@ def add_word():
         new_word = data.get('word')
 
         if new_word is None:
-            return jsonify({"error": "Missing 'word' parameter"}), 400
+            return handle_error('invalid_input')  # Use handle_error for missing 'word' parameter
 
         # Validate new_word using the input validation function
         validation_error = validate_input_string(new_word, 'new word')
         if validation_error:
-            return jsonify({"error": validation_error}), 400
+            return handle_error('invalid_input')  # Use handle_error for validation error
 
         word_list.append(new_word)
         saved_word_list = save_corpus(CORPUS_FILE_PATH, word_list)
 
         if saved_word_list is None:
             logging.error("Failed to save the updated corpus.")
-            return jsonify({"error": "Failed to save the updated corpus"}), 500
+            return handle_error('internal_error')  # Use handle_error for internal error
 
         return jsonify({"message": f"Word '{new_word}' added to the corpus"}), 201
 
     except IOError as exc:
         logging.error("IO error while adding a word: %s", exc)
-        return jsonify({"error": f"IO error: {exc}"}), 500
+        return handle_error('internal_error')  # Use handle_error for internal error
     except Exception as exc:  # pylint: disable=W0718
         logging.error(
             "An unexpected error occurred while adding a word: %s", exc)
-        return jsonify({"error": f"An unexpected error occurred: {exc}"}), 500
+        return handle_error('internal_error')  # Use handle_error for internal error
 
-# known bug: if you have replaced a word,
-# then delete the replaced word, the original
-# word with the same name will still appear in
-# the search results
+
 @app.route('/remove_similar_word', methods=['DELETE'])
 def remove_similar_word():
     """
@@ -208,7 +212,7 @@ def remove_similar_word():
         # Validate target_word using the input validation function
         validation_error = validate_input_string(target_word, 'target word')
         if validation_error:
-            return jsonify({"error": validation_error}), 400
+            return handle_error('invalid_input')  # Use handle_error for validation error
 
         removed_count = 0
 
@@ -223,7 +227,7 @@ def remove_similar_word():
             if saved_word_list is None:
                 logging.error(
                     "Failed to save the updated corpus while removing a similar word.")
-                return jsonify({"error": "Failed to save the updated corpus"}), 500
+                return handle_error('internal_error')
 
             message = f"Removed {removed_count} occurrences of word '{target_word}' from the corpus"
             return jsonify({"message": message}), 200
@@ -234,12 +238,12 @@ def remove_similar_word():
     except KeyError as exc:
         error_message = f"Key error: {exc}"
         logging.error("Key error while removing a similar word: %s", exc)
-        return jsonify({"error": error_message}), 400
+        return handle_error('internal_error')
     except Exception as exc: # pylint: disable=W0718
         error_message = f"An unexpected error occurred: {exc}"
         logging.error(
             "An unexpected error occurred while removing a similar word: %s", exc)
-        return jsonify({"error": error_message}), 500
+        return handle_error('internal_error')
 
 
 @app.route('/replace_word', methods=['PUT'])
@@ -259,10 +263,10 @@ def replace_word():
         validation_error_new = validate_input_string(new_word, 'new word')
 
         if validation_error_old:
-            return jsonify({"error": validation_error_old}), 400
+            return handle_error('invalid_input')  # Use handle_error for validation error
 
         if validation_error_new:
-            return jsonify({"error": validation_error_new}), 400
+            return handle_error('invalid_input')  # Use handle_error for validation error
 
         replaced_count = 0
 
@@ -277,12 +281,14 @@ def replace_word():
         if replaced_count > 0:
             return jsonify({"message": f"Replaced {replaced_count} \
                             occurrences of '{old_word}' with '{new_word}' in the corpus"}), 200
-        return jsonify({"error": f"No occurrences of '{old_word}' found in the corpus"}), 404
+
+        return handle_error('not_found_in_corpus')  # Use handle_error for not found in the corpus
 
     except Exception as exc: # pylint: disable=W0718
         logging.error(
             "An unexpected error occurred while replacing a word: %s", exc)
-        return jsonify({"error": f"An unexpected error occurred: {exc}"}), 500
+        return handle_error('internal_error')
+
 
 @app.route('/get_corpus', methods=['GET'])
 def get_corpus():
@@ -294,7 +300,7 @@ def get_corpus():
     except Exception as exc: # pylint: disable=W0718
         logging.error(
             "An unexpected error occurred while retrieving the corpus: %s", exc)
-        return jsonify({"error": f"An unexpected error occurred: {exc}"}), 500
+        return handle_error('internal_error')  # Use handle_error for internal error
 
 # Start the Flask app if the script is executed directly
 if __name__ == '__main__':
