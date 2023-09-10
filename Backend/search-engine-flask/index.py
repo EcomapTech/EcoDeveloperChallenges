@@ -3,10 +3,11 @@
 
 import re
 import logging
+import pickle
 import spacy
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from .word2vec_utils import word2vec_model, find_most_similar_words
+from .word2vec_utils import find_most_similar_words
 from .config import CORPUS_FILE_PATH, CONTEXT_SIZE, ERROR_MESSAGES
 
 # Load spaCy model with word vectors
@@ -80,8 +81,11 @@ def save_corpus(file_path, new_word_list, encoding='utf-8'):
 # Load the initial word list from the corpus file
 word_list = load_corpus(CORPUS_FILE_PATH)
 
-# Create a set of words found in the Word2Vec model
-model_vocabulary_filtered = set(word2vec_model.index_to_key).intersection(word_list)
+# Load the custom vocabulary from the pickle file
+with open('vocabulary.pkl', 'rb') as vocab_file:
+    custom_vocab = pickle.load(vocab_file)
+# # Create a set of words found in the Word2Vec model
+# model_vocabulary_filtered = set(word2vec_model.index_to_key).intersection(word_list)
 
 # Define a reusable input validation function
 def validate_input_string(input_value, field_name):
@@ -137,7 +141,8 @@ def get_similar_words():
     if error:
         return handle_error('invalid_input')
 
-    similar_words = find_most_similar_words(query_word, word2vec_model, word_list)
+    # Use your custom similarity calculation logic with the custom vocabulary
+    similar_words = find_most_similar_words(query_word, custom_vocab, word_list)
 
     # Return the results as JSON
     return jsonify({"query_word": query_word, "similar_words": similar_words})
