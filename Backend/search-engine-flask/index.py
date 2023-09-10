@@ -87,7 +87,7 @@ word_list = load_corpus(CORPUS_FILE_PATH)
 # Create a set of words found in the Word2Vec model'
 model_vocabulary_filtered = set(word2vec_model.index_to_key).intersection(word_list)
 
-# Create a set of words found in the corpus but not in the Word2Vec model
+# Find similar words using the Word2Vec model
 def find_most_similar_words(query_word, word2vec_model, word_list, num_results=3, similarity_threshold=0):
     try:
         # Find similar words with a lower similarity threshold
@@ -114,13 +114,13 @@ def find_most_similar_words(query_word, word2vec_model, word_list, num_results=3
                         break
 
         # Return the top num_results words with the highest similarity scores, limited to word_list
-        filtered_similar_words = similar_words[:num_results]
+        filtered_similar_words = [word for word in similar_words if word in word_list][:num_results]
 
         return {"query_word": query_word, "similar_words": filtered_similar_words} 
     except KeyError as exc:
         logging.error("Key error while finding similar words: %s", exc)
         raise KeyError("Word not found in model") from exc
-
+    
 @app.route('/similar-words', methods=['GET'])
 def get_similar_words():
     query_word = request.args.get('w')
