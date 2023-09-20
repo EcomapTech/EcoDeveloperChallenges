@@ -26,7 +26,9 @@ Bonus features are completely optional. If you choose to implement any of the bo
 
 The screenshots below show the proposed design for the Todo list and the Add Todo modal. Please follow the design as closely as possible in your implementation. Fonts, font sizes, and colors do not have to match perfectly, but the general layout should be similar.
 
-IMAGE_PLACEHOLDER
+<img width="250" alt="Screenshot 2023-09-19 at 3 24 25 PM" src="https://github.com/EcomapTech/FullStackDeveloperChallenge/assets/1442232/55b51ba3-3576-4264-a81b-744e1f36bd33">
+<img width="250" alt="Screenshot 2023-09-19 at 3 24 36 PM" src="https://github.com/EcomapTech/FullStackDeveloperChallenge/assets/1442232/2a790803-e765-49e6-8ce4-f3cc4bc99dc2">
+
 
 ## Instructions
 
